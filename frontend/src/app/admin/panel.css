@@ -1,0 +1,656 @@
+/* Panel chrome — shared by /admin, /portal and the auth pages. Reuses the app
+   design tokens (globals.css) so it follows the same light/dark theme as the
+   rest of the app. No hard-coded colors, and CLASS SELECTORS ONLY: an element
+   selector here would race globals.css depending on which realm loaded first.
+   The .admin-* prefix is historical — renaming ~200 call sites buys nothing. */
+
+/*
+ * The panel's own chrome — `.admin-shell`, `.admin-body`, `.admin-subnav`,
+ * `.admin-tab` and `.admin-login` — is GONE: /admin was converted to the
+ * Tickwise design and its layout is now built from design-system utilities in
+ * app/admin/layout.tsx. What remains below is the CONTENT chrome, still worn by
+ * the admin editors and by the customer portal, and re-painted onto the design
+ * tokens by the `tw-bridge` layer in app.css wherever it renders inside `.tw`.
+ */
+
+/* cards */
+.admin-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+
+.admin-h {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--tk-muted);
+  margin: 0 0 14px;
+}
+
+.admin-h1 {
+  font-size: 18px;
+  margin: 0 0 2px;
+  color: var(--text);
+}
+
+/* tables */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: middle;
+}
+
+.admin-table th {
+  color: var(--faint);
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.admin-table tbody tr:hover,
+.admin-table tr:hover td {
+  background: var(--hover);
+}
+
+/* ---------- narrow-screen form rows ---------- */
+
+/*
+ * `.admin-row` is a wrapping flex row, and on a phone its controls burst out of
+ * the card they sit in.
+ *
+ * The cause is `min-width: auto`, the default for a flex item: it refuses to
+ * shrink below its MIN-CONTENT width. A `<select>`'s min-content is set by its
+ * longest OPTION — "Browser key (frontend, origin-bound)" on the keys page, far
+ * wider than the visible "Server key (backend-only)" — so the control rendered
+ * wider than the sibling text input and overhung the card edge. `min-width: 0`
+ * on every child is the actual fix and is applied broadly, because any child with
+ * long unbreakable content has the same failure.
+ *
+ * Inputs and selects then take the full row, which also lines them up: two
+ * controls of different intrinsic widths stacked above each other read as a
+ * layout mistake even when nothing overflows. Buttons keep their natural width so
+ * a row of them stays a row.
+ */
+@media (max-width: 720px) {
+  .admin-row > * {
+    min-width: 0;
+  }
+
+  .admin-row > .admin-input,
+  .admin-row > .admin-select {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}
+
+/* ---------- narrow-screen table stacking (opt-in: .stackTable) ---------- */
+
+/*
+ * A wide table in a phone-width column is a sideways scroll gesture over data
+ * somebody has to READ. Measured on a 375px viewport: the plan table rendered
+ * 944px wide inside a 293px wrapper, so five of six columns — including the
+ * price — were off-screen. Here each row becomes a card and each cell names
+ * itself from `data-label`.
+ *
+ * The markup stays a real `<table>`: the header row is only hidden, so column
+ * semantics, selection and copy-paste survive, and the desktop view is
+ * untouched.
+ *
+ * OPT-IN by class, because `/admin` is a desktop surface where a scroller is the
+ * right answer for a 12-column ops table. Two rules for anything wearing it:
+ *   - every `td` needs `data-label`, or it renders as a value with no name once
+ *     the header is gone. A cell deliberately without one (an actions column)
+ *     simply gets no label, which is why the selector is `td[data-label]`.
+ *   - the label is a BLOCK ABOVE the value, not a left column. A flex or grid
+ *     row makes every child of the cell its own track, so the `<strong>` +
+ *     `.admin-note` pairs this app uses everywhere would sit side by side.
+ *     Stacking is the only shape that survives arbitrary cell content.
+ */
+@media (max-width: 720px) {
+  .stackTable thead {
+    display: none;
+  }
+
+  /*
+   * `height: auto` is NOT redundant here — do not delete it as dead weight.
+   *
+   * Switching a table's internals to `display: block` leaves Chrome sizing the
+   * cells from the original ROW height: measured every cell in the plan table at
+   * exactly 43px (the one-line row) while the Plan cell held 79px of content, so
+   * the description overflowed 36px and painted straight over the Price row and
+   * its label. No stylesheet sets a height and nothing is contained or out of
+   * flow — declaring `height: auto` explicitly is what makes the cells resolve
+   * as the block boxes they now are. Verified on a cold load, not just after an
+   * HMR patch.
+   */
+  .stackTable,
+  .stackTable tbody,
+  .stackTable tr,
+  .stackTable td {
+    display: block;
+    width: auto;
+    height: auto;
+  }
+
+  .stackTable tr {
+    margin-bottom: 10px;
+    padding: 4px 12px 8px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel-2);
+  }
+
+  .stackTable tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .stackTable td {
+    border: 0;
+    padding: 7px 0;
+    /* Stacked cells are full-width, so nothing needs to hold a line any more —
+       and the long ones (an API key prefix, a wallet address, a list of origins)
+       must be allowed to break rather than push the card wide. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-width: none;
+  }
+
+  .stackTable td + td {
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .stackTable td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 3px;
+    color: var(--faint);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* The row IS the card, so a hover fill on it reads as a pressed state. */
+  .stackTable tbody tr:hover,
+  .stackTable tr:hover td {
+    background: transparent;
+  }
+
+  /*
+   * The wrapper's scroll is what this replaces — left on, the cards sit in a box
+   * that still drags sideways over nothing. Measured: 145px of empty scroll range
+   * on the billing page, because a `display: block` `<table>` keeps reporting its
+   * column-sum `scrollWidth` even after every cell has been stacked.
+   *
+   * TWO classes deliberately, and the reason has changed — do not "simplify" to
+   * one. Originally a single `.stackTableWrap` lost to `.portalShell .tableWrap`
+   * in `site.css` (0,2,0 beats 0,1,0) and silently did nothing; that rule is now
+   * deleted, because `.portalShell` stopped being rendered at the migration. What
+   * a single class would compete with TODAY is `globals.css`'s
+   * `.tableWrap { overflow-x: visible }` — a 0,1,0 tie decided purely by load
+   * order, and the only thing making this file the winner is that `app.css`
+   * imports it after `globals.css` and `site.css` in the `legacy` layer.
+   * `.stackTableWrap.tableWrap` wins on specificity instead, so re-ordering those
+   * three imports cannot quietly break stacking.
+   *
+   * Inside a `.tw` subtree this rule is not the one that lands: the bridge's
+   * `@media (max-width: 720px) .tw .stackTableWrap.tableWrap` in `app.css` sits
+   * in a later layer and restates the same thing. This stays for the legacy
+   * routes, which have no `.tw` ancestor.
+   *
+   * It dresses `.cardTable` too — the name is older than the second shape, and
+   * a `.cardTableWrap` duplicating this specificity-sensitive pair across three
+   * files for zero behavioural change is how the next load-order bug gets
+   * written.
+   */
+  .stackTableWrap.tableWrap {
+    overflow-x: visible;
+    padding: 0;
+  }
+}
+
+/* ---------- narrow-screen table cards (opt-in: .cardTable) ---------- */
+
+/*
+ * `.stackTable`'s SIBLING, not its replacement — it is still worn by
+ * `/portal/keys` and by `SignInMethods`, and reshaping it in place would
+ * redesign two surfaces nobody has looked at.
+ *
+ * Why a second shape exists at all: stacking gives every CELL its own
+ * full-width row with its name above it, which trades a sideways scroll for a
+ * vertical one. Measured at 375px, one client in the `/admin` list came to
+ * 283px of card — five labelled blocks, two of which printed the same email
+ * address twice — so three clients filled nearly two screens. `.cardTable`
+ * packs the same row into ONE card of two or three lines: identity on the
+ * first, the short attributes as inline text or pills on the second, actions
+ * on the third. Same client, 100px.
+ *
+ * Three rules for anything wearing it:
+ *   - CHILD COMBINATORS ONLY. `.stackTable`'s block is all descendant
+ *     selectors, and that is exactly why the bridge in `app.css` had to grow a
+ *     whole repair cluster restoring `display: table` on the Tailwind tables
+ *     inside the clients table's own detail cell. Scoped with `>` throughout,
+ *     this class cannot reach a nested table and that repair is never needed.
+ *   - NO `data-label` pseudo-element. The label above the value is the defect
+ *     being removed: a status badge, a plan name and a date name themselves.
+ *     `data-label` may stay on the markup — it is what the desktop-only
+ *     `.stackTable` path reads — but nothing here renders it.
+ *   - PLACEMENT COMES FROM `data-cell`, not `nth-child`, so it survives a
+ *     column reorder and reads at the call site. One `data-cell` value per
+ *     grid area per row: two cells naming the same area would sit on top of
+ *     each other, so a cell the mobile layout folds into another has to be
+ *     hidden rather than left unplaced.
+ *
+ * Every value cell is a single ellipsised line. A name, an email or a key
+ * prefix can then never set the card's width — the failure that let a 61-char
+ * address escape 372px past the card edge and into `body`'s `overflow-x: clip`,
+ * where it was neither visible nor scrollable.
+ */
+@media (max-width: 720px) {
+  .cardTable > thead {
+    display: none;
+  }
+
+  /* `height: auto` for the same reason `.stackTable` needs it — see the note in
+     that block: Chrome otherwise sizes the new block boxes from the original
+     row height. */
+  .cardTable,
+  .cardTable > tbody {
+    display: block;
+    width: auto;
+    height: auto;
+  }
+
+  .cardTable > tbody > tr {
+    display: grid;
+    height: auto;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel-2);
+    column-gap: 8px;
+    row-gap: 4px;
+  }
+
+  .cardTable > tbody > tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .cardTable > tbody > tr > td {
+    display: block;
+    width: auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+    max-width: none;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* An area whose cells all render nothing would still cost its row-gap. */
+  .cardTable > tbody > tr > td:empty {
+    display: none;
+  }
+
+  /* The row IS the card, so a hover fill on it reads as a pressed state. */
+  .cardTable > tbody > tr:hover,
+  .cardTable > tbody > tr:hover > td {
+    background: transparent;
+  }
+
+  /* ---- per-table area maps ---- */
+
+  .cardTable.clientsCards > tbody > tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity identity"
+      "sub      sub"
+      "plan     status"
+      "actions  actions";
+  }
+
+  .cardTable.keysCards > tbody > tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity status"
+      "sub      sub"
+      "actions  actions";
+  }
+
+  /*
+   * THE PLAN EDITOR, and the one card in this file that keeps its labels.
+   *
+   * `.stackTable` was the first answer and it looked wrong for a reason worth
+   * writing down: it gives every cell a full-width row, so eight fields that
+   * are 70–130px wide each got a 293px line to sit at the left of. Measured,
+   * one plan came out **624px tall** — a column of tiny ragged boxes with a
+   * hairline between each, which reads as a broken layout rather than a form.
+   *
+   * A two-column grid fixes both halves. The short numerics pair up
+   * (units/rate, then max-keys/enabled), the two fields that carry prose or a
+   * suffix take the full width (name, price with its dollar equivalent and its
+   * "no monthly price row yet" note), and the card lands at roughly half the
+   * height with every input filling its cell instead of floating in it.
+   *
+   * LABELS ARE RE-ENABLED HERE, against `.cardTable`'s rule. That rule is right
+   * for the clients and keys lists — a plan name and a status word do not need
+   * naming — and wrong for this table, where every cell is a form field and an
+   * unlabelled number box is unreadable. Same reasoning that put the plans
+   * table on `.stackTable` in the first place; only the geometry changed.
+   */
+  .cardTable.plansCards > tbody > tr {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "identity identity"
+      "name     name"
+      "units    rate"
+      "price    price"
+      "keys     enabled"
+      "actions  actions";
+    row-gap: 10px;
+  }
+
+  /* Slot names local to this card. Kept out of the shared
+     `identity / sub / plan / status / figure / actions` vocabulary above
+     because they mean nothing on any other table. */
+  .cardTable.plansCards > tbody > tr > td[data-cell='name'] {
+    grid-area: name;
+  }
+  .cardTable.plansCards > tbody > tr > td[data-cell='units'] {
+    grid-area: units;
+  }
+  .cardTable.plansCards > tbody > tr > td[data-cell='rate'] {
+    grid-area: rate;
+  }
+  .cardTable.plansCards > tbody > tr > td[data-cell='price'] {
+    grid-area: price;
+  }
+  .cardTable.plansCards > tbody > tr > td[data-cell='keys'] {
+    grid-area: keys;
+  }
+  .cardTable.plansCards > tbody > tr > td[data-cell='enabled'] {
+    grid-area: enabled;
+  }
+
+  .cardTable.plansCards > tbody > tr > td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    color: var(--faint);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /*
+   * A form field is not a value: it must wrap, not ellipsise. `.cardTable`'s
+   * one-line clip exists so no name or key prefix can set the card's width —
+   * here it would eat the dollar equivalent beside the price box and both of
+   * that cell's warning notes.
+   */
+  .cardTable.plansCards > tbody > tr > td {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  /*
+   * `!important` is load-bearing, not laziness: these widths are INLINE styles
+   * on the inputs (`style={{ width: 130 }}`), which is the desktop column
+   * design and has to stay. An inline declaration outranks every selector, so
+   * the cascade offers nothing else that can hand a 70px box the full width of
+   * its grid cell. Scoped to this card and this breakpoint.
+   */
+  .cardTable.plansCards .admin-input {
+    width: 100% !important;
+  }
+
+  /*
+   * …except where the field SHARES its line. The price cell is an `.admin-row`
+   * holding the cents box and the dollar equivalent beside it; at a flat 100%
+   * the box claimed the whole line and pushed "$49.00" onto its own, which is
+   * the one place the two are meant to be read together. `flex: 1` keeps it
+   * filling whatever the note leaves.
+   */
+  .cardTable.plansCards .admin-row > .admin-input {
+    flex: 1 1 auto;
+    width: auto !important;
+    min-width: 0;
+  }
+
+  /*
+   * The actions row, for the same inline-style reason. Its 182px is a DESKTOP
+   * column reservation ("two buttons per line, two lines" — see the call site),
+   * and carried into a card that is twice that wide it broke Delete onto a line
+   * of its own with 186px of empty row beside it. Full width, and all four fit
+   * on one line.
+   */
+  .cardTable.plansCards > tbody > tr > td[data-cell='actions'] > .admin-row {
+    width: 100% !important;
+  }
+
+  /*
+   * Endpoint pricing. Four facts and a button: the route key, what it is, the
+   * price, whether it is on. `figure` carries the unit-cost input and `status`
+   * the enabled checkbox, side by side on one line — they are 90px and 13px
+   * wide and a line each would be two thirds of the card spent on whitespace.
+   * The label and the row's state pills share `sub`, which keeps the route key
+   * alone on line 1 where the ellipsis cannot reach it.
+   */
+  .cardTable.pricingCards > tbody > tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity identity"
+      "sub      sub"
+      "figure   status"
+      "actions  actions";
+  }
+
+  .cardTable.routeCards > tbody > tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity figure"
+      "sub      sub";
+  }
+
+  .cardTable > tbody > tr > td[data-cell="identity"] {
+    grid-area: identity;
+  }
+  .cardTable > tbody > tr > td[data-cell="sub"] {
+    grid-area: sub;
+  }
+  .cardTable > tbody > tr > td[data-cell="plan"] {
+    grid-area: plan;
+  }
+  .cardTable > tbody > tr > td[data-cell="status"] {
+    grid-area: status;
+  }
+  .cardTable > tbody > tr > td[data-cell="figure"] {
+    grid-area: figure;
+  }
+  .cardTable > tbody > tr > td[data-cell="actions"] {
+    grid-area: actions;
+  }
+
+  /*
+   * A cell that spans the table spans the CARD. Keyed on `colspan` rather than
+   * a class because every one of them is already marked that way in the markup
+   * — the expanded detail panel, an origins editor, an empty state — and none
+   * of them is a value: the single-line ellipsis above would turn a whole
+   * inline panel into one clipped line, and `white-space: nowrap` inherits.
+   */
+  .cardTable > tbody > tr > td[colspan] {
+    grid-column: 1 / -1;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  /*
+   * …and a row that is ONLY such a cell is not a card: an origins editor is a
+   * form belonging to the key above it, and an empty-state note is a sentence.
+   * Framing either as its own card detaches it from what it describes.
+   *
+   * `tr.admin-detail-row` is the deliberate exception — it is welded to the
+   * open row above and the two share one card.
+   */
+  .cardTable > tbody > tr:not(.admin-detail-row):has(> td[colspan]:only-child) {
+    /* Areas cleared, COLUMNS KEPT: the area map is 3–4 rows tall and each one
+       it does not use still costs a `row-gap` under the form. The two columns
+       stay so that either placement lands full-width — `grid-column: 1 / -1`
+       from the rule above, or a `col-span-2` utility from the call site. The
+       trailing track collapses to 0 with nothing in it, but the gap beside it
+       does not, so a spanning cell would come out 8px short of the card. */
+    grid-template-areas: none;
+    column-gap: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+}
+
+/* form controls */
+.admin-input,
+.admin-select {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+
+.admin-input::placeholder {
+  color: var(--faint);
+}
+
+.admin-input:focus,
+.admin-select:focus {
+  outline: none;
+  border-color: var(--tk-accent);
+}
+
+.admin-btn {
+  /* inline-flex so the class works on <a> (portal CTAs) as well as <button> —
+     vertical padding on an inline anchor doesn't reserve line-box height. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: var(--tk-accent);
+  color: var(--tk-accent-ink);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 15px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter 0.15s, opacity 0.15s;
+}
+
+.admin-btn:hover {
+  filter: brightness(1.06);
+}
+
+.admin-btn.ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.admin-btn.ghost:hover {
+  background: var(--hover);
+  filter: none;
+}
+
+.admin-btn.danger {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid var(--red-line);
+}
+
+.admin-btn.danger:hover {
+  background: var(--red-soft);
+  filter: none;
+}
+
+.admin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-btn.sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.admin-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-error {
+  color: var(--red);
+  font-size: 13px;
+  margin: 8px 0;
+}
+
+.admin-ok {
+  color: var(--green-soft);
+  font-size: 13px;
+  margin: 8px 0;
+}
+
+.admin-note {
+  font-size: 12px;
+  color: var(--tk-muted);
+  margin: 6px 0;
+}
+
+.admin-key {
+  background: color-mix(in oklab, var(--tk-accent) 12%, transparent);
+  border: 1px solid var(--tk-accent);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text);
+  word-break: break-all;
+  margin: 8px 0;
+}
+
+.admin-pill {
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--soft);
+}
+
+.admin-pill.revoked {
+  color: var(--red);
+  border-color: var(--red-line);
+}

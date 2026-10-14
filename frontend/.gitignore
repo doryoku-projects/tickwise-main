@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+.env.local
+.env
+.DS_Store
+
+# TypeScript incremental build cache (generated)
+*.tsbuildinfo
+
+# Verification build directory (see build:check / next.config.ts)
+.next-verify/

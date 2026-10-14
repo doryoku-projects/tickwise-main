@@ -1,0 +1,2834 @@
+/* ============================================================
+   Tickwise — refined terminal theme.
+   Neutral tokens switch on [data-theme]; --tk-accent / --tk-accent-ink
+   are injected per palette by the Tweaks panel (see PositionsDashboard).
+   Class names + layout are unchanged — this is a visual re-skin only.
+   ============================================================ */
+
+:root {
+  --mono: var(--font-mono), "JetBrains Mono", "Berkeley Mono",
+    "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  /* accent palette — overwritten at runtime; turquoise default (dark) */
+  --tk-accent: #2ee6c9;
+  --tk-accent-ink: #03211b;
+}
+
+/* ---- DARK : deep ink, indigo-leaning neutrals ---- */
+[data-theme="dark"] {
+  --bg: #0a0b10;
+  --bg-grad: #0d0e15;
+  --panel: #14151d;
+  --panel-2: #1a1c26;
+  --panel-3: #21232f;
+  --hover: #1e2029;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-soft: rgba(255, 255, 255, 0.07);
+  --text: #e9eaf2;
+  --soft: #c4c7d8;
+  --tk-muted: #9396ab;
+  --faint: #5f627a;
+  --green: var(--tk-accent); /* accent (brand / CTA / active) */
+  --green-soft: #46d28a; /* gain — kept green for semantics */
+  --red: #f76d6d; /* loss — kept red for semantics */
+  --red-soft: rgba(247, 109, 109, 0.16);
+  --red-line: rgba(247, 109, 109, 0.42);
+  --blue: #8fb9cf;
+  --amber: #e0a13d;
+  --info-bg: rgba(70, 120, 210, 0.13);
+  --info-bd: rgba(90, 140, 230, 0.28);
+  --shadow: 0 24px 70px -12px rgba(0, 0, 0, 0.7);
+  color-scheme: dark;
+}
+
+/* ---- LIGHT : crisp white, cool slate grays ---- */
+[data-theme="light"] {
+  --bg: #eef1f6;
+  --bg-grad: #e9edf3;
+  --panel: #ffffff;
+  --panel-2: #f5f7fa;
+  --panel-3: #eceff4;
+  --hover: #f3f5f9;
+  --line: rgba(15, 23, 42, 0.14);
+  --line-soft: rgba(15, 23, 42, 0.09);
+  --text: #161a26;
+  --soft: #3f465a;
+  --tk-muted: #5a6175;
+  --faint: #9097a8;
+  --green: var(--tk-accent);
+  --green-soft: #12925a;
+  --red: #d63d3d;
+  --red-soft: rgba(214, 61, 61, 0.1);
+  --red-line: rgba(214, 61, 61, 0.3);
+  --blue: #3b7fc4;
+  --amber: #b8791f;
+  --info-bg: rgba(40, 110, 210, 0.08);
+  --info-bd: rgba(40, 110, 210, 0.22);
+  --shadow: 0 30px 80px -16px rgba(20, 30, 60, 0.22);
+  color-scheme: light;
+}
+
+/* default to dark tokens before [data-theme] is applied */
+:root:not([data-theme]) {
+  --bg: #0a0b10;
+  --bg-grad: #0d0e15;
+  --panel: #14151d;
+  --panel-2: #1a1c26;
+  --panel-3: #21232f;
+  --hover: #1e2029;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-soft: rgba(255, 255, 255, 0.07);
+  --text: #e9eaf2;
+  --soft: #c4c7d8;
+  --tk-muted: #9396ab;
+  --faint: #5f627a;
+  --green: var(--tk-accent);
+  --green-soft: #46d28a;
+  --red: #f76d6d;
+  --red-soft: rgba(247, 109, 109, 0.16);
+  --red-line: rgba(247, 109, 109, 0.42);
+  --blue: #8fb9cf;
+  --amber: #e0a13d;
+  --info-bg: rgba(70, 120, 210, 0.13);
+  --info-bd: rgba(90, 140, 230, 0.28);
+  --shadow: 0 24px 70px -12px rgba(0, 0, 0, 0.7);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  /*
+   * `--font-sans` (Manrope), matching tickwise's own `body` rule. This was
+   * `var(--mono)` — a holdover from the mono-first legacy dashboard — which made
+   * the document default JetBrains Mono. It is invisible on every current route
+   * because `.tw` (on each shell) re-declares `--font-sans` for its descendants,
+   * so `main`/`table`/`button` already resolved to Manrope. It mattered for any
+   * text rendered OUTSIDE a shell, which would silently inherit mono.
+   *
+   * Elements that genuinely want tabular/monospaced figures declare
+   * `var(--mono)` explicitly — they do not rely on inheriting it from here.
+   */
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--tk-accent) 40%, transparent);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.revertShell {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      1200px 520px at 84% -8%,
+      color-mix(in oklab, var(--tk-accent) 12%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(180deg, var(--bg-grad), var(--bg) 340px);
+  background-attachment: fixed;
+}
+
+.appNav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in oklab, var(--bg) 78%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  color: var(--soft);
+  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.navMark {
+  color: var(--tk-accent);
+  font-size: 17px;
+  margin-right: 10px;
+}
+
+.appNav a {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.appNav a:hover {
+  color: var(--text);
+}
+
+.appNav a.active {
+  color: var(--tk-accent);
+  background: color-mix(in oklab, var(--tk-accent) 14%, transparent);
+  border-radius: 7px;
+  padding: 0 10px;
+}
+
+.navSpacer {
+  margin-left: auto;
+}
+
+/* theme toggle + tweaks (added by the redesign — presentational only) */
+.themeToggle {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0 12px;
+  background: var(--panel-2);
+  color: var(--soft);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.12s ease;
+}
+
+.themeToggle:hover {
+  color: var(--text);
+  border-color: var(--line);
+  background: var(--hover);
+}
+
+.tweaksWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.tweaksTrigger {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-2);
+  color: var(--soft);
+  transition: all 0.12s ease;
+}
+
+.tweaksTrigger:hover,
+.tweaksTrigger.on {
+  color: var(--tk-accent);
+  background: var(--hover);
+}
+
+.tweaksPanel {
+  position: absolute;
+  top: 38px;
+  right: 0;
+  z-index: 60;
+  width: 232px;
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  text-transform: none;
+}
+
+.tweakGroup {
+  display: grid;
+  gap: 9px;
+}
+
+.tweakLabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.swatches {
+  display: flex;
+  gap: 9px;
+}
+
+.swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-shadow: 0 0 0 1px var(--line) inset;
+  transition: transform 0.1s ease;
+}
+
+.swatch:hover {
+  transform: scale(1.08);
+}
+
+.swatch.on {
+  border-color: var(--text);
+}
+
+.densityRow {
+  display: flex;
+  gap: 6px;
+}
+
+.densityBtn {
+  flex: 1;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-2);
+  color: var(--tk-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  transition: all 0.12s ease;
+}
+
+.densityBtn:hover {
+  color: var(--text);
+}
+
+.densityBtn.on {
+  background: var(--tk-accent);
+  border-color: var(--tk-accent);
+  color: var(--tk-accent-ink);
+}
+
+.connectButton {
+  height: 30px;
+  border: 0;
+  border-radius: 7px;
+  padding: 0 16px;
+  color: var(--tk-accent-ink);
+  background: var(--tk-accent);
+  font-weight: 900;
+  transition: filter 0.12s ease;
+}
+
+.connectButton:hover {
+  filter: brightness(1.08);
+}
+
+.positionsPage {
+  width: min(1600px, calc(100vw - 72px));
+  margin: 46px auto 72px;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.pageHeader h1 {
+  margin: 0;
+  font-size: 23px;
+  line-height: 1.05;
+}
+
+.pageHeader p,
+.positionLogs p {
+  margin: 8px 0 0;
+  color: var(--tk-muted);
+  font-size: 13px;
+}
+
+.controlCluster,
+.revertToolbar,
+.pagination,
+.detailActions,
+.logActions,
+.titleMeta,
+.poolCell,
+.chartToolbar,
+.chartTabs,
+.logTabs {
+  display: flex;
+  align-items: center;
+}
+
+.controlCluster {
+  gap: 5px;
+}
+
+.dropdownWrap {
+  position: relative;
+}
+
+.dropdownButton,
+.syncButton,
+.iconButton,
+.miniButton,
+.chartToolbar button,
+.chartTabs button,
+.logActions button,
+.logTabs button {
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: var(--panel);
+}
+
+/* The line after "Copy this view as a /v1 call": quiet text beside the button,
+   empty (and so invisible) until something was copied. */
+.v1CopyHint {
+  font-size: 12px;
+  color: var(--tk-muted);
+  white-space: nowrap;
+}
+.v1CopyHint a {
+  color: var(--tk-accent);
+  text-decoration: underline;
+}
+
+.dropdownButton {
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 6px;
+  padding: 0 13px;
+  font-weight: 800;
+}
+
+/* Caption for the filter toolbar, sharing the cluster's height and rhythm but
+   none of its affordance — no border, no fill, no hover, no pointer. It is a
+   `<span>` in the markup; these are the styles that stop it reading as the
+   third dropdown in the row. */
+.filtersLabel {
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 13px;
+  color: var(--tk-muted);
+  font-weight: 800;
+  cursor: default;
+  user-select: none;
+}
+
+.chainIcon,
+.protocolIcon {
+  width: 23px;
+  height: 23px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--tk-accent-ink);
+  background: var(--tk-accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.protocolIcon.muted {
+  color: var(--tk-muted);
+  background: var(--panel-3);
+}
+
+.protocolMenu {
+  position: absolute;
+  right: 0;
+  top: 43px;
+  width: 242px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  box-shadow: var(--shadow);
+  display: none;
+  z-index: 30;
+}
+
+/* Invisible hover bridge across the 5px gap between the 38px button and the
+   menu (top: 43px) — without it, moving the pointer from button to menu
+   crosses a dead zone, :hover drops, and the menu collapses mid-travel. */
+.protocolMenu::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 0;
+  right: 0;
+  height: 6px;
+}
+
+/* Openness is React state (`.menuOpen`), not `:hover, :focus-within`. Hover and
+   focus still open the menu — the component's handlers do it — but through a
+   single variable that can only name one picker, so the two panels can no
+   longer be open at the same time. The old CSS could: a click leaves the
+   trigger focused, :focus-within held that menu open after the pointer left,
+   and hovering the sibling trigger opened a second one over it. */
+.dropdownWrap.menuOpen .protocolMenu {
+  display: grid;
+  gap: 4px;
+}
+
+.protocolMenu button {
+  height: 44px;
+  border: 0;
+  border-radius: 7px;
+  display: grid;
+  grid-template-columns: 24px 1fr 24px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 9px;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+  font-weight: 800;
+}
+
+.protocolMenu button.active {
+  color: var(--tk-accent-ink);
+  background: var(--tk-accent);
+}
+
+.protocolMenu button.active .protocolIcon,
+.protocolMenu button.active .checkBox {
+  background: color-mix(in oklab, var(--tk-accent-ink) 20%, transparent);
+}
+
+.checkBox {
+  width: 21px;
+  height: 21px;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+}
+
+.revertToolbar {
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.searchControl,
+.compactSelect,
+.miniToggle {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--tk-muted);
+}
+
+.searchControl {
+  flex: 1 1 360px;
+  padding: 0 10px;
+}
+
+.searchControl:focus-within {
+  border-color: color-mix(in oklab, var(--tk-accent) 50%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--tk-accent) 14%, transparent);
+}
+
+.searchControl input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  background: transparent;
+}
+
+.compactSelect {
+  padding: 0 8px;
+}
+
+.compactSelect select {
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  background: transparent;
+}
+
+.miniToggle {
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.miniToggle input {
+  accent-color: var(--tk-accent);
+}
+
+.iconButton {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+}
+
+/* Modal close (X): pinned to the panel's top-right corner on ALL sizes so it
+   never wraps below the header on mobile, and tinted light-red as the standard
+   dismiss affordance. Absolute vs the position:relative `.positionDetail`, so
+   it sits outside the (wrapping) header flow. */
+.closeButton {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  color: var(--red);
+  background: var(--red-soft);
+  border: 1px solid var(--red-line);
+}
+
+.closeButton:hover {
+  background: color-mix(in oklab, var(--red) 22%, var(--panel));
+  border-color: var(--red);
+}
+
+.syncButton {
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 6px;
+  padding: 0 11px;
+  color: var(--tk-accent);
+  border-color: color-mix(in oklab, var(--tk-accent) 35%, var(--line));
+  font-weight: 800;
+}
+
+.viewTabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.viewTabs button {
+  height: 30px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 6px;
+  color: var(--soft);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.viewTabs button.active {
+  color: var(--tk-accent-ink);
+  background: var(--tk-accent);
+  font-weight: 900;
+}
+
+.sortStrip {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 0 0 13px;
+}
+
+.sortStrip button {
+  height: 31px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--soft);
+  background: var(--panel);
+  padding: 0 10px;
+}
+
+.sortStrip button.active {
+  color: var(--tk-accent-ink);
+  border-color: var(--tk-accent);
+  background: var(--tk-accent);
+  font-weight: 900;
+}
+
+.infoBanner {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 999px;
+  padding: 0 14px;
+  margin: 3px 0 26px;
+  color: var(--text);
+  background: var(--info-bg);
+  border: 1px solid var(--info-bd);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.infoBanner span {
+  color: var(--soft);
+  font-weight: 700;
+}
+
+/*
+ * On a phone the pill has to stop being a pill.
+ *
+ * The lead text and the trailing clause are two flex items, so at 335px flex
+ * SHRINKS both instead of wrapping: the lead wrapped to two lines in a narrow
+ * left column with the clause beside it, inside a 999px radius drawn around a
+ * two-line box. Block flow makes it one ordinary wrapped sentence.
+ *
+ * `span::before` restores the word space that `gap` was providing — JSX drops
+ * the newline between the text and the `<span>`, so block flow would run them
+ * together ("…account— renewal notices"). Idempotent: the one call site that
+ * already has a literal space collapses the pair to one.
+ *
+ * `svg` is styled for `PositionsDashboard`, the only banner that leads with an
+ * icon — it relied on `align-items: center`, and without a rule here it would
+ * sit on the text baseline.
+ */
+@media (max-width: 640px) {
+  .infoBanner {
+    display: block;
+    width: auto;
+    min-height: 0;
+    padding: 9px 12px;
+    border-radius: 12px;
+    line-height: 1.5;
+  }
+
+  .infoBanner span::before {
+    content: ' ';
+  }
+
+  .infoBanner svg {
+    vertical-align: -3px;
+    margin-right: 6px;
+  }
+}
+
+.positionsTablePanel {
+  border: 0;
+  background: transparent;
+}
+
+.tableWrap,
+.logsTableWrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+.positionsTable {
+  min-width: 1240px;
+}
+
+th,
+td {
+  padding: 0 16px;
+  height: 43px;
+  white-space: nowrap;
+  text-align: left;
+  font-size: 13px;
+  color: var(--soft);
+  font-weight: 650;
+}
+
+th {
+  height: 32px;
+  color: var(--tk-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+tbody tr {
+  background: var(--panel);
+  outline: 1px solid var(--line);
+  border-radius: 8px;
+  transition:
+    background 0.15s ease,
+    outline-color 0.15s ease;
+}
+
+/* Leaderboard rows (positions + pools, both use .positionsTable) open a detail
+   on click → finger cursor on hover. */
+.positionsTable tbody tr {
+  cursor: pointer;
+}
+
+tbody tr:hover {
+  background: var(--panel-2);
+  outline-color: color-mix(in oklab, var(--tk-accent) 40%, var(--line));
+}
+
+/* Out-of-range = structural problem; loud red. Loss is conveyed by the red PnL/APR column text, not by tinting the row. */
+tbody tr.outOfRangeRow {
+  background: var(--red-soft);
+  outline-color: var(--red-line);
+  box-shadow: inset 0 0 0 1px var(--red-line);
+}
+
+tbody tr.outOfRangeRow:hover {
+  background: color-mix(in oklab, var(--red) 14%, var(--panel));
+  outline-color: var(--red);
+}
+
+.outBadge {
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  background: var(--red-soft);
+  color: var(--red);
+  border: 1px solid var(--red-line);
+}
+
+td:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+td:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* ---- row density (Tweaks panel) ---- */
+[data-density="compact"] td {
+  height: 36px;
+}
+[data-density="compact"] table {
+  border-spacing: 0 6px;
+}
+[data-density="comfy"] td {
+  height: 54px;
+}
+[data-density="comfy"] table {
+  border-spacing: 0 11px;
+}
+
+.sortHeader {
+  height: 25px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 5px;
+  padding: 0 5px;
+  color: var(--tk-muted);
+  background: transparent;
+}
+
+.sortHeader.active {
+  color: var(--text);
+}
+
+.sortIconAsc {
+  transform: rotate(180deg);
+}
+
+.poolCell {
+  gap: 6px;
+}
+
+.poolCell strong {
+  font-size: 15px;
+}
+
+.poolCell > span:not(.tokenBadge):not(.versionPill):not(.chainPill):not(.feeDanger):not(.hookBadge) {
+  color: var(--tk-muted);
+  font-size: 12px;
+}
+
+/* A static LP fee of 5% or more (FeeLabel): shown, never hidden — real pools
+   of two majors live up there too — but flagged in the loss red, with the
+   explanation in the tooltip and for screen readers. */
+.feeDanger {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--red);
+  background: var(--red-soft);
+  border: 1px solid var(--red-line);
+  cursor: help;
+  white-space: nowrap;
+}
+
+.feeDanger svg {
+  flex: none;
+}
+
+.feeDangerText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* A v4 pool's hook (HookBadge): the FeeLabel pill's shape in `.infoBanner`'s
+   info colours, since the hook is a fact about the pool, not a danger. The
+   label keeps `--text` (the light theme's `--blue` and `--amber` are under
+   4.5:1 on their tints at 12px); only the icon takes the colour. A hook whose
+   address can take or redirect value the swap events do not show
+   (`hookBadgeCustom`) is tinted amber. The tooltip text is `.feeDangerText`. */
+.hookBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--info-bg);
+  border: 1px solid var(--info-bd);
+  cursor: help;
+  white-space: nowrap;
+}
+
+.hookBadge svg {
+  flex: none;
+  color: var(--blue);
+}
+
+.hookBadgeCustom {
+  background: color-mix(in oklab, var(--amber) 14%, transparent);
+  border-color: color-mix(in oklab, var(--amber) 45%, transparent);
+}
+
+.hookBadgeCustom svg {
+  color: var(--amber);
+}
+/* A position owned by a burn address, or a burned one (owner = the zero
+   address) (OwnerLabel): the address stays, plus an info button that opens a
+   note under it (tooltip on hover too; the note is screen-reader text while
+   closed). The FeeLabel pill's shape in `.infoBanner`'s info colours, not the
+   loss red — it is a fact about the position, not a danger. The address keeps
+   `--text` (the light theme's `--blue` is under 4.5:1 on `--info-bg` at 12px);
+   only the icon is blue. The pill's and the note's selectors are doubled
+   (0,2,0) because the detail panel renders them inside `.dataRow`, whose
+   `.dataRow span` (0,1,1) would otherwise turn them into muted blocks. */
+.ownerLocked.ownerLocked {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--info-bg);
+  border: 1px solid var(--info-bd);
+  cursor: help;
+  white-space: nowrap;
+}
+
+.ownerLocked svg {
+  flex: none;
+  color: var(--blue);
+}
+
+/* The info icon is a real button (keyboard focus, a tap target that does not
+   fall through to the row): no button chrome, a visible focus ring. */
+.ownerLockedButton {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ownerLockedButton:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+/* The note, opened: a block under the address, in the pill's colours and the
+   body font (the owner cell is `.mono .accent`). In flow rather than a
+   floating popover, so `.tableWrap`'s horizontal scroll and the detail
+   panel's `overflow: hidden` cannot clip it. */
+.ownerLockedNote.ownerLockedNote {
+  display: block;
+  max-width: 300px;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: normal;
+  color: var(--text);
+  background: var(--info-bg);
+  border: 1px solid var(--info-bd);
+  cursor: default;
+}
+
+.ownerLockedText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.accent {
+  color: var(--tk-accent);
+}
+
+.positive {
+  color: var(--green-soft);
+  font-weight: 800;
+}
+
+.negative {
+  color: var(--red);
+  font-weight: 800;
+}
+
+.pendingMetric {
+  color: var(--tk-muted);
+}
+
+.aprWarmupBadge {
+  margin-left: 4px;
+  color: var(--tk-muted);
+  font-size: 0.85em;
+  cursor: help;
+}
+
+.heroMetricNote {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--tk-muted);
+}
+
+.tokenBadge {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--tk-accent) 45%, var(--line));
+  color: var(--tk-accent);
+  background: color-mix(in oklab, var(--tk-accent) 14%, var(--panel));
+  font-size: 10px;
+  font-weight: 900;
+}
+
+/* skeleton shown while a token logo is still loading. Visible sweep in both
+   themes — a panel-only gradient was invisible on the dark badge. */
+.tokenBadgeSkeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    90deg,
+    var(--panel-2) 0%,
+    color-mix(in oklab, var(--soft) 28%, var(--panel-2)) 50%,
+    var(--panel-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.1s infinite linear;
+}
+
+.tokenBadge.compact {
+  width: 22px;
+  height: 22px;
+  flex-basis: 22px;
+}
+
+/* logo overlays the symbol; absolute so the symbol stays centered beneath */
+.tokenBadge img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: opacity 0.25s ease;
+}
+
+.versionPill {
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 5px;
+  padding: 0 6px;
+  color: var(--tk-accent);
+  background: color-mix(in oklab, var(--tk-accent) 16%, var(--panel));
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* Neutral chain chip (ETH / AVAX) — versionPill geometry, muted palette. */
+.chainPill {
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 5px;
+  padding: 0 6px;
+  color: var(--tk-muted);
+  background: var(--panel-3);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+/* "ALL" fits the 23px round chain icon only at a smaller size. */
+.chainIcon.all {
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+.pagination {
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.pagination span {
+  color: var(--tk-muted);
+  font-size: 13px;
+}
+
+/* What is actually on screen, stated next to the pager: the pager counts the
+   server's result set, and a token search filters only the loaded page, so
+   without this line the two silently disagree. */
+.resultsNote {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.resultsNote em {
+  color: var(--soft);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.pageControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* The search-scope empty state: a text search that matched nothing on the
+   loaded page is a different situation from "no positions match your
+   filters", and says so rather than sending the user to change filters. */
+.emptyState .clearSearch {
+  height: 30px;
+  border-radius: 6px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.notice,
+.emptyState,
+.logsEmpty {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.notice {
+  padding: 12px;
+  margin-bottom: 14px;
+  color: var(--red);
+  overflow-wrap: anywhere;
+}
+
+.emptyState {
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  /* Horizontal padding, because the hint carries `max-width: 46ch` and on a phone
+     46ch is wider than the box: the text then ran to 1px inside its own border on
+     both sides, which reads as a rendering fault rather than as centred copy. */
+  padding: 0 16px;
+  color: var(--tk-muted);
+}
+
+.emptyState strong {
+  color: var(--text);
+}
+
+.skeletonRows {
+  display: grid;
+  gap: 8px;
+}
+
+.skeletonRow {
+  height: 43px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--panel),
+    var(--panel-3),
+    var(--panel)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite linear;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+/* chart skeleton — shimmering bar silhouette shown in a chart slot while the
+   position's chart data loads. Fills the standard chart box. */
+.chartSkeleton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 16px;
+}
+
+.chartSkeleton span {
+  flex: 1;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--panel),
+    var(--panel-3),
+    var(--panel)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite linear;
+}
+
+/* logs skeleton — shown while a position's transactions load */
+.logsSkeleton {
+  display: grid;
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.logsSkeletonRow {
+  height: 38px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--panel),
+    var(--panel-3),
+    var(--panel)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite linear;
+}
+
+.logsSkeletonRow:first-child {
+  height: 28px;
+  opacity: 0.7;
+}
+
+.detailOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: auto;
+  padding: 46px 34px;
+  background: color-mix(in oklab, var(--bg) 55%, rgba(0, 0, 0, 0.55));
+  backdrop-filter: blur(6px);
+}
+
+/* Position detail opened from inside the pool modal — stack above it (pool
+   overlay is z-index 50). The wrapper establishes a stacking context so the
+   nested .detailOverlay paints over the pool modal. */
+.poolPositionDetailLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+
+/* Full pool id → revert.finance deep-link in the pool modal header. */
+.poolIdLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 320px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--soft);
+  font-size: 12px;
+}
+.poolIdLink:hover {
+  color: var(--tk-accent);
+}
+.poolIdLink .mono {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.poolIdLink svg {
+  flex: 0 0 auto;
+}
+
+/* Pool modal grid: don't stretch the two columns to equal height. The chart
+   column must report its INTRINSIC height so the JS that sizes the positions
+   page (so the list ends ~where the charts do) measures a value that isn't
+   coupled to the positions list itself (otherwise: feedback loop → max page). */
+.poolGrid {
+  align-items: start;
+}
+
+/* Loading / empty state centered inside a fixed-height chart box, so the box
+   keeps the same height whether or not the chart has rendered (no reflow). */
+.chartLoading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--tk-muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 0 12px;
+}
+
+/* In-pool positions live in the modal's right column (filling the space under
+   Pool overview), so the full wide leaderboard table won't fit — render it as
+   compact labeled cards at all widths, and drop the per-row pool name (every
+   row is the same pool here). */
+.poolPositions .tableWrap {
+  overflow-x: visible;
+}
+.poolPositions .positionsTable {
+  min-width: 0;
+  display: block;
+}
+.poolPositions .positionsTable thead {
+  display: none;
+}
+.poolPositions .positionsTable tbody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.poolPositions .positionsTable tbody tr {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px 12px;
+  padding: 12px;
+  border-radius: 10px;
+}
+/* Same card cell as the responsive layout, and block flow for the same reason:
+   the label is a ::before and the APR value carries an inline `*` marker, which
+   a column flex box pushes onto a line of its own. */
+.poolPositions .positionsTable td {
+  height: auto;
+  padding: 0;
+  display: block;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.35;
+}
+.poolPositions .positionsTable td::before {
+  content: attr(data-label);
+  display: block;
+  margin-bottom: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--tk-muted);
+}
+.poolPositions .positionsTable td.poolCellTd {
+  display: none;
+}
+.poolPositions .pagination {
+  margin-top: 10px;
+}
+
+.positionDetail {
+  position: relative;
+  width: min(1500px, 100%);
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.detailAccent {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 9px;
+  background: var(--tk-accent);
+}
+
+.detailHero,
+.heroStats,
+.detailGrid,
+.positionLogs {
+  margin-left: 9px;
+}
+
+.detailHero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 15px 20px 8px;
+  /* Reserve room at the right for the absolutely-pinned `.closeButton` so the
+     in-flow header actions (ref / share / more) never sit under it. */
+  padding-right: 58px;
+}
+
+.pairTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pairIcons {
+  display: flex;
+}
+
+.pairIcons .tokenBadge + .tokenBadge {
+  margin-left: -8px;
+}
+
+.detailHero h2 {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.1;
+}
+
+.titleMeta {
+  gap: 7px;
+  margin-top: 6px;
+  color: var(--tk-muted);
+  font-size: 12px;
+  /* Wrap chips onto a new line on narrow screens instead of overflowing —
+     fixes the cut "In Range" pill (positions) and the pool id running off the
+     right edge (pools). */
+  flex-wrap: wrap;
+  row-gap: 6px;
+  min-width: 0;
+}
+
+.rangeStatusPill {
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 5px;
+  padding: 0 7px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.rangeStatusPill.in {
+  color: var(--tk-accent-ink);
+  background: var(--tk-accent);
+}
+
+.rangeStatusPill.out {
+  color: #fff;
+  background: var(--red);
+}
+
+.detailActions {
+  gap: 6px;
+}
+
+.miniButton {
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Basis picker in the detail header. Was a <label> wrapping a native <select>
+   plus a decorative chevron, where only the select's own box responded to a
+   click; it is a button + popup menu now, so the whole control is the target. */
+.refTrigger {
+  gap: 6px;
+  padding: 0 8px;
+  cursor: pointer;
+}
+
+.refTrigger .refLabel {
+  color: var(--tk-muted);
+  text-transform: lowercase;
+  font-weight: 800;
+}
+
+/* Popup shell shared by the ref picker and the "more actions" menu. Anchored
+   to the right edge because both triggers sit at the panel's right side. */
+.detailMenuWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.detailMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 5px);
+  min-width: 128px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  box-shadow: var(--shadow);
+  display: none;
+  z-index: 40;
+}
+
+.detailMenu.wide {
+  min-width: 192px;
+}
+
+.detailMenuWrap.menuOpen .detailMenu {
+  display: grid;
+  gap: 2px;
+}
+
+.detailMenu button,
+.detailMenu a {
+  height: 34px;
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 9px;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.detailMenu button span,
+.detailMenu a span {
+  flex: 1 1 auto;
+}
+
+.detailMenu button:hover:not(:disabled),
+.detailMenu a:hover {
+  background: var(--panel-3);
+}
+
+.detailMenu button:disabled {
+  color: var(--tk-muted);
+  cursor: not-allowed;
+}
+
+.detailMenu button.active {
+  color: var(--tk-accent-ink);
+  background: var(--tk-accent);
+}
+
+/* Transient confirmation for copy / share / refresh. Sits under the action row
+   so it never displaces the buttons while it is visible.
+
+   It gets its own zero-width anchor rather than making `.detailActions`
+   relative: `.closeButton` is absolutely pinned to the panel (top/right 14px),
+   and a positioned `.detailActions` would become its containing block and drag
+   the X on top of the "more" button. */
+.actionToastAnchor {
+  position: relative;
+  width: 0;
+  align-self: stretch;
+}
+
+.actionToast {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--tk-muted);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  z-index: 41;
+  pointer-events: none;
+}
+
+.spinning {
+  animation: tkSpin 0.9s linear infinite;
+}
+
+@keyframes tkSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinning {
+    animation: none;
+  }
+}
+
+.heroStats {
+  display: grid;
+  grid-template-columns: 220px repeat(5, minmax(120px, 1fr));
+  gap: 14px;
+  padding: 8px 20px 16px;
+}
+
+.rangeMini,
+.heroMetric {
+  min-width: 0;
+}
+
+.rangeMini span,
+.heroMetric span,
+.dataRow span {
+  display: block;
+  color: var(--tk-muted);
+  font-size: 12px;
+}
+
+.rangeMini .rangeTrack {
+  position: relative;
+  height: 26px;
+  margin-top: 6px;
+  outline: 0;
+}
+
+.rangeMini i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 11px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--panel-3);
+}
+
+.rangeMini b {
+  position: absolute;
+  top: 8px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--tk-accent);
+}
+
+.rangeMini.out b {
+  background: var(--red);
+}
+
+.rangeMini em {
+  position: absolute;
+  top: 3px;
+  width: 3px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--text);
+  transform: translateX(-50%);
+}
+
+.rangeTooltip {
+  position: absolute;
+  left: 50%;
+  bottom: 32px;
+  z-index: 5;
+  min-width: 210px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: var(--panel-2);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 6px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.rangeTrack:hover .rangeTooltip,
+.rangeTrack:focus .rangeTooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.rangeMini small {
+  color: var(--tk-muted);
+  font-size: 11px;
+}
+
+.rangeTooltip small {
+  display: block;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.heroMetric strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 21px;
+}
+
+.detailDivider {
+  height: 1px;
+  margin: 0 20px 0 29px;
+  background: var(--line);
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: minmax(420px, 0.96fr) minmax(520px, 1.04fr);
+  gap: 30px;
+  padding: 16px 20px 26px;
+}
+
+.chartColumn,
+.dataColumn {
+  min-width: 0;
+}
+
+/* "expand charts" — one column instead of two, so the charts get the panel's
+   full width and the metrics column reflows underneath rather than being
+   hidden. The taller boxes are the point of expanding; every chart in here is
+   autoSize / ResizeObserver-driven, so widening re-fits them without a
+   remount. */
+.detailGrid.chartsExpanded {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Guarded by the same 1120px breakpoint that collapses the grid on its own:
+   below it the layout is already one column and the phone rules cap chart
+   height at 250px, which these would otherwise override (media queries add no
+   specificity) and hand a phone a 440px-tall chart. */
+@media (min-width: 1121px) {
+  .detailGrid.chartsExpanded .tvChartBox {
+    height: 440px;
+  }
+
+  .detailGrid.chartsExpanded .tvChartBox.liqBox {
+    height: 330px;
+  }
+
+  .detailGrid.chartsExpanded .emptyChart {
+    height: 440px;
+  }
+}
+
+.chartToolbar {
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.chartToolbar span {
+  color: var(--soft);
+  font-size: 12px;
+}
+
+.chartToolbar button,
+.chartTabs button,
+.logActions button,
+.logTabs button {
+  min-height: 26px;
+  border-radius: 6px;
+  padding: 0 10px;
+  color: var(--soft);
+  font-size: 12px;
+}
+
+.chartToolbar button.active,
+.logActions button.active,
+.logTabs button.active {
+  color: var(--tk-accent-ink);
+  border-color: var(--tk-accent);
+  background: var(--tk-accent);
+  font-weight: 900;
+}
+
+.chartToolbar .expandButton {
+  margin-left: auto;
+}
+
+/*
+ * Series tabs (PnL / Assets value / APR / Fees APR / Div. loss).
+ *
+ * Flex items shrink by default, so in a narrow column the two-word labels
+ * wrapped to a second line — and since the row is centre-aligned, a 38px
+ * two-line button sat beside a 26px one-line button with neither top nor
+ * bottom edge in common. It read as a broken row rather than a set of tabs.
+ * They keep their intrinsic width now and the strip scrolls if the set is
+ * wider than the column, which is what `.sortStrip` above the table does.
+ */
+.chartTabs {
+  gap: 7px;
+  margin-bottom: 18px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.chartTabs button {
+  flex: 0 0 auto;
+  height: 28px;
+  white-space: nowrap;
+}
+
+.chartTabs button.active {
+  color: var(--text);
+  background: var(--panel-3);
+}
+
+.emptyChart {
+  height: 285px;
+  border: 1px dashed var(--line);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  color: var(--tk-muted);
+  font-size: 12px;
+}
+
+.chartColumn h3,
+.dataSection h3,
+.positionLogs h3 {
+  margin: 28px 0 10px;
+  font-size: 14px;
+}
+
+.liquidityBox {
+  position: relative;
+  height: 245px;
+  border-top: 1px dashed var(--line);
+  border-bottom: 1px dashed var(--line);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 78px,
+      var(--line-soft) 79px
+    ),
+    var(--panel-2);
+  overflow: hidden;
+}
+
+.liquidityFill {
+  position: absolute;
+  inset: 18px 0 18px;
+  border-top: 1px solid color-mix(in oklab, var(--green-soft) 55%, transparent);
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--green-soft) 55%, transparent);
+  background: color-mix(in oklab, var(--green-soft) 16%, transparent);
+}
+
+.minLabel,
+.maxLabel {
+  position: absolute;
+  bottom: 0;
+  z-index: 2;
+  padding: 4px 6px;
+  font-size: 10px;
+  border-radius: 4px;
+}
+
+.minLabel {
+  left: 0;
+  color: var(--text);
+  background: var(--panel-3);
+}
+
+.maxLabel {
+  right: 0;
+  color: var(--tk-accent-ink);
+  background: var(--tk-accent);
+  font-weight: 700;
+}
+
+.priceChart {
+  position: relative;
+  height: 270px;
+  border: 1px solid var(--line);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 34px,
+      var(--line-soft) 35px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 72px,
+      var(--line-soft) 73px
+    ),
+    var(--panel-2);
+}
+
+.priceChart span {
+  position: absolute;
+  bottom: 45%;
+  width: 2px;
+  background: var(--green-soft);
+}
+
+.priceChart span:nth-child(4n) {
+  background: var(--red);
+}
+
+/* ── TradingView lightweight-charts + bespoke liquidity histogram ── */
+.tvChartBox {
+  position: relative;
+  width: 100%;
+  height: 322px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+
+.tvChartBox.liqBox {
+  height: 258px;
+}
+
+/* Liquidity histogram (bespoke SVG) fills the box. */
+.tvChart {
+  position: absolute;
+  inset: 0;
+}
+
+/* lightweight-charts canvas: fills the box except a 24px bottom strip reserved
+   for our own HTML month labels (LWC's canvas time-axis clips its labels here,
+   so we hide it and render the axis in HTML below). */
+.tvCanvas {
+  position: absolute;
+  inset: 0 0 24px 0;
+}
+
+/* Position-log pager. Mono numerals so the range text does not reflow as the
+   page changes; the design tokens are picked up via the .tw shell. */
+.logsPager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 10px 4px 2px;
+  font-size: 12px;
+}
+
+.logsPager button {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  padding: 4px 9px;
+}
+
+.logsPager button:hover:not(:disabled) {
+  border-color: var(--green-soft);
+  color: var(--green-soft);
+}
+
+.logsPager button:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
+.logsPagerInfo {
+  color: var(--tk-muted);
+  font-family: var(--mono);
+  margin: 0 6px;
+  white-space: nowrap;
+}
+
+.tvAxis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 24px;
+  pointer-events: none;
+}
+
+.tvAxis span {
+  position: absolute;
+  top: 5px;
+  transform: translateX(-50%);
+  color: var(--tk-muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+/*
+ * "Mint" label on the PnL/series chart. HTML rather than a lightweight-charts
+ * marker label: marker text is centred on its bar, and the mint is the FIRST bar
+ * pinned flush to the left edge by `fixLeftEdge`, so half of it was clipped off the
+ * canvas and it read "int". `pointer-events: none` keeps it clear of the crosshair.
+ */
+.tvMintLabel {
+  position: absolute;
+  z-index: 2;
+  color: var(--tk-muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.tvChart.liqChart svg {
+  display: block;
+}
+
+.tvTooltip {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+  min-width: 118px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--panel) 94%, transparent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--soft);
+}
+
+.tvTooltipDate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  color: var(--tk-muted);
+  font-size: 10px;
+}
+
+.tvTooltipRow {
+  line-height: 1.5;
+  color: var(--soft);
+}
+
+.tvTooltipValue {
+  margin: 2px 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.tvTooltipPair {
+  margin-top: 2px;
+  color: var(--tk-muted);
+  font-size: 10px;
+}
+
+.tvTooltipLocked {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.liqCurBadge {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--green-soft);
+  color: var(--tk-accent-ink);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.seriesHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.seriesHeaderStat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.seriesHeaderLabel {
+  color: var(--tk-muted);
+  font-size: 12px;
+}
+
+.seriesHeaderStat strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.seriesHeaderStat strong.positive {
+  color: var(--green-soft);
+}
+
+.seriesHeaderStat strong.negative {
+  color: var(--red);
+}
+
+.seriesDeltaUp {
+  color: var(--green-soft);
+  font-size: 12px;
+}
+
+.seriesDeltaDown {
+  color: var(--red);
+  font-size: 12px;
+}
+
+.rangeButtons {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.rangeButtons button {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--tk-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.rangeButtons button.active {
+  background: var(--green-soft);
+  border-color: transparent;
+  color: var(--tk-accent-ink);
+  font-weight: 700;
+}
+
+.dataColumn {
+  display: grid;
+  gap: 22px;
+  align-content: start;
+}
+
+.dataSection h3 {
+  margin-top: 0;
+}
+
+.dataSection > div {
+  border-top: 1px dashed var(--line-soft);
+}
+
+.dataRow {
+  min-height: 32px;
+  display: grid;
+  grid-template-columns: 145px minmax(160px, 1fr) minmax(120px, 0.65fr);
+  grid-template-areas:
+    "label value note"
+    ".     extra extra2";
+  column-gap: 10px;
+  row-gap: 2px;
+  align-items: center;
+  border-bottom: 1px dashed var(--line-soft);
+  padding: 6px 0;
+  font-size: 12px;
+}
+
+.dataRow > span {
+  grid-area: label;
+}
+.dataRow > strong {
+  grid-area: value;
+}
+.dataRow > em {
+  grid-area: note;
+}
+.dataRow > code:nth-of-type(1) {
+  grid-area: extra;
+}
+.dataRow > code:nth-of-type(2) {
+  grid-area: extra2;
+}
+
+.dataRow strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.dataRow strong.positive {
+  color: var(--green-soft);
+  font-weight: 900;
+}
+
+.dataRow strong.negative {
+  color: var(--red);
+  font-weight: 900;
+}
+
+.dataRow em {
+  color: var(--tk-muted);
+  font-style: normal;
+}
+
+.dataRow em b {
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--tk-accent-ink);
+  background: var(--green-soft);
+  font-size: 11px;
+}
+
+.dataRow code {
+  min-width: 0;
+  color: var(--soft);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.dataRow code:empty {
+  display: none;
+}
+
+.positionLogs {
+  border-top: 1px solid var(--line);
+  padding: 16px 20px 28px;
+}
+
+.logActions {
+  gap: 8px;
+  margin-bottom: 26px;
+}
+
+.logActions span {
+  flex: 1;
+}
+
+.logTabs {
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.logsTable {
+  min-width: 1080px;
+  border-spacing: 0 7px;
+}
+
+.logsTable th,
+.logsTable td {
+  height: 38px;
+  font-size: 12px;
+}
+
+.logsTable a {
+  color: var(--tk-accent);
+  border-radius: 5px;
+  padding: 4px 7px;
+  background: color-mix(in oklab, var(--tk-accent) 14%, var(--panel-2));
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.stackedValue {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stackedValue strong {
+  font-size: 12px;
+}
+
+.stackedValue small {
+  color: var(--tk-muted);
+  font-size: 11px;
+}
+
+.txTypeFees {
+  color: var(--tk-accent);
+  font-weight: 800;
+}
+
+.txTypeWithdraw {
+  color: var(--amber);
+  font-weight: 800;
+}
+
+.logsEmpty {
+  min-height: 90px;
+  display: grid;
+  place-items: center;
+  color: var(--tk-muted);
+  font-size: 13px;
+}
+
+/* ============================================================
+   Account forms — password reveal, one-time code, account email.
+   Used by /login, /signup, /verify-email and /portal, all of which
+   also load app/admin/panel.css for the .admin-* chrome. Every colour
+   is a token, so both themes follow with no extra rules.
+   ============================================================ */
+
+/* Password field: the input keeps its full .admin-input look and reserves room
+   on the right for the reveal button, which is overlaid rather than laid out —
+   a sibling in the flow would break the single-column auth form's rhythm. */
+.pwField {
+  position: relative;
+  display: flex;
+}
+
+.pwField > .admin-input {
+  flex: 1;
+  min-width: 0;
+  /* Room for the toggle. Without it, a long value slides under the icon. */
+  padding-right: 38px;
+}
+
+.pwToggle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--tk-muted);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.pwToggle:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.pwToggle:focus-visible {
+  outline: 2px solid var(--tk-accent);
+  outline-offset: 1px;
+  color: var(--text);
+}
+
+.pwToggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* One-time code */
+.otpForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.otpLabel {
+  font-size: 12px;
+  color: var(--tk-muted);
+  /* Long addresses must not push the card wider than its column. */
+  overflow-wrap: anywhere;
+}
+
+.otpRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Two class names, not one: `.otpInput` alone ties with `.admin-input` in
+   panel.css, and which sheet lands last is a build detail, not a decision. */
+.admin-input.otpInput {
+  /* Sized for six characters, not for the container: a full-width box invites
+     a sentence, and the spacing makes a mistyped digit easy to spot. Six mono
+     glyphs at 0.6em plus six 0.3em gaps is 5.4em, so 7em clears the padding
+     without letting the last digit clip. */
+  width: 7em;
+  flex: 0 0 auto;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  /* letter-spacing trails the last glyph; pull the run back so six digits read
+     as centred rather than nudged left. */
+  text-indent: 0.3em;
+  padding: 9px 6px;
+}
+
+/* Account email */
+.emailPrompt {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+/* The banner already carries the bottom margin when it stands alone; inside a
+   prompt the gap above belongs to the stack. */
+.emailPrompt .infoBanner {
+  margin-bottom: 0;
+}
+
+.emailForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emailFormRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.emailFormRow .admin-input {
+  flex: 1 1 240px;
+  min-width: 0;
+  max-width: 340px;
+}
+
+@media (max-width: 1120px) {
+  .positionsPage {
+    width: calc(100vw - 28px);
+    margin-top: 28px;
+  }
+
+  /*
+   * `gap` tightened from 22px because the portal now mounts its Menu button here
+   * (see `.appNavMenuBtn`). Measured at 375px: with the button and the desktop
+   * gap the row was 390px inside 375px, i.e. it started scrolling — the exact
+   * failure the button was moved here to avoid. Four gaps × 8px recovers more
+   * than the button costs. `overflow-x` stays as the backstop for genuinely
+   * narrow phones rather than as the normal case; if you add anything else to
+   * this row, re-measure at 320px.
+   */
+  .appNav {
+    gap: 14px;
+    overflow-x: auto;
+    padding: 0 14px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+  }
+
+  .heroStats,
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dataRow {
+    grid-template-columns: 120px 1fr;
+    grid-template-areas:
+      "label value"
+      ".     note"
+      ".     extra"
+      ".     extra2";
+  }
+}
+
+/* tablet & below: positions table rows collapse into labeled cards
+   (matches top-positions-new-ui — no horizontal scroll on the main table) */
+@media (max-width: 1024px) {
+  .tableWrap {
+    overflow-x: visible;
+  }
+
+  .positionsTable {
+    min-width: 0;
+    display: block;
+  }
+
+  .positionsTable thead {
+    display: none;
+  }
+
+  .positionsTable tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .positionsTable tbody tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+
+  /*
+   * `display: block`, NOT `flex-direction: column`.
+   *
+   * The label is a ::before, so a column flex box makes every child of the
+   * cell its own flex LINE — and the APR cells carry an inline `*` warm-up
+   * marker after the number, which was landing on a line of its own under the
+   * value, reading as a stray asterisk in the middle of the card. Block flow
+   * keeps the marker beside the figure it annotates and the label on its own
+   * line, which is all the layout ever wanted.
+   */
+  .positionsTable td {
+    height: auto;
+    padding: 0;
+    display: block;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.35;
+  }
+
+  /* per-cell label sits above the value on cards */
+  .positionsTable td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+    color: var(--tk-muted);
+  }
+
+  /* pool cell spans the full card width and keeps no label */
+  .positionsTable td.poolCellTd {
+    grid-column: 1 / -1;
+  }
+
+  .positionsTable td.poolCellTd::before {
+    content: none;
+  }
+
+  .positionsTable .poolCell {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+}
+
+@media (max-width: 540px) {
+  .positionsTable tbody tr {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Keep BOTH real nav links (Home + Admin panel) reachable on mobile — only
+     drop the redundant "CP" home mark (Home already links to "/"). The nav has
+     overflow-x:auto, so the two links + theme toggle fit or scroll. The old
+     rule hid every link except `.active`, which made Admin unreachable on
+     mobile from the home page. */
+  .appNav .navMark {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .connectButton {
+    display: none;
+  }
+
+  .controlCluster,
+  .revertToolbar,
+  .detailHero,
+  .detailActions,
+  .logActions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Search gets its own full-width row; everything else (chain/protocol/
+     filters dropdowns, value/status/range selects, risky toggle) shares
+     wrapping rows instead of one full-width line each — so the data shows
+     much sooner on mobile. */
+  .searchControl,
+  .syncButton {
+    width: 100%;
+  }
+
+  .dropdownButton,
+  .compactSelect,
+  .miniToggle {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* Square, not `width: auto`: auto let it collapse to its 16px glyph plus
+     nothing, leaving an 18px-wide refresh button on a touch screen. `flex: 0 0
+     auto` is what keeps it out of the full-width stretch. */
+  .revertToolbar .iconButton {
+    width: 32px;
+    flex: 0 0 auto;
+  }
+
+  /*
+   * Phone control scale.
+   *
+   * Everything above sized the cluster and toolbar for a mouse: 38px pills at
+   * 14px type, a 36px title over a 16px subtitle, and a bold 13px banner. On a
+   * 375px screen that wrapped into six full-width rows and the table started
+   * below the fold — the filters had eaten the page. Nothing is hidden except
+   * the decorative `filters` caption; the controls are simply a phone size,
+   * and every tap target stays at or above 28px.
+   */
+  .controlCluster,
+  .revertToolbar {
+    gap: 6px;
+  }
+
+  .dropdownButton {
+    height: 32px;
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .chainIcon,
+  .protocolIcon {
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
+  }
+
+  .compactSelect,
+  .miniToggle,
+  .searchControl,
+  .revertToolbar .iconButton {
+    height: 32px;
+  }
+
+  .viewTabs button {
+    height: 28px;
+    padding: 0 13px;
+  }
+
+  .sortStrip button {
+    height: 28px;
+    padding: 0 9px;
+  }
+
+  /* Not a control — a funnel icon and the word "filters", captioning filters
+     that are already visible below it. On a phone it cost a whole wrapped row
+     of a screen that had none to spare. */
+  .filtersLabel {
+    display: none;
+  }
+
+  .infoBanner {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .infoBanner span {
+    font-weight: 500;
+  }
+
+  .pageHeader {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  /* The picker panel is a fixed 242px floated off its trigger's RIGHT edge, and
+     the trigger is narrower than that once the cluster wraps — so the chain menu
+     hung 80px past the left edge of a 375px screen with its rows clipped and
+     unreachable. No anchor side is safe here: pinning left instead just moves
+     the overflow to whichever trigger the wrapping happens to put on the right,
+     and which trigger that is changes with the viewport.
+
+     So on a phone the panel anchors to the CLUSTER rather than to its trigger:
+     full width, directly under the row of pickers, whichever one opened it.
+     Overflow becomes unrepresentable, and the options get a full-width row
+     instead of the 148px the trigger would have offered.
+
+     It used to do this by making the open picker `flex: 1 1 100%` and dropping
+     the panel inline beneath it — which worked, but opening a menu then
+     re-flowed the row: the tapped pill stretched to full width and pushed its
+     neighbour onto a second line, so the controls moved under the thumb that
+     had just tapped them. Anchoring to the cluster leaves both pills where
+     they are. */
+  .controlCluster {
+    position: relative;
+  }
+
+  /* Static, so the panel's containing block is the cluster above and not its
+     own trigger — that is what moves the anchor. */
+  .dropdownWrap {
+    position: static;
+  }
+
+  .protocolMenu {
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    width: auto;
+  }
+
+  /* The bridge exists to keep :hover alive across the gap to a floating panel.
+     Inline there is no gap, and on touch there is no hover. */
+  .protocolMenu::before {
+    display: none;
+  }
+
+  .detailOverlay {
+    padding: 12px;
+  }
+
+  .detailHero,
+  .heroStats,
+  .detailGrid,
+  .positionLogs {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  /* Hero metrics: 2-up grid instead of one tall stacked column. */
+  .heroStats {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Position-detail range bar needs full width; let it span both columns. */
+  .heroStats .rangeMini {
+    grid-column: 1 / -1;
+  }
+
+  .heroMetric strong {
+    font-size: 17px;
+  }
+
+  /* Full pool id link wraps + ellipsizes cleanly in the modal header. */
+  .poolIdLink {
+    max-width: 100%;
+  }
+
+  .emptyChart,
+  .liquidityBox,
+  .priceChart,
+  .tvChartBox {
+    height: 250px;
+  }
+
+  /* Buys back ~40px, which is what lets all five series tabs fit a 375px
+     column instead of clipping "Div. loss" behind a 10px scroll. */
+  .chartTabs {
+    gap: 5px;
+  }
+
+  .chartTabs button {
+    padding: 0 7px;
+  }
+}
+
+/* An all-chains list served without some chains (`partial` + `missingChains`):
+   muted like `.logsNote`, above the table — the rows shown are correct for
+   the chains they come from. */
+.listNote {
+  margin: 0 0 10px;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--tk-muted);
+  overflow-wrap: anywhere;
+}
+
+/* A busy position's log while its older history loads (`transactionsPartial`):
+   muted, not the red `.notice` — nothing failed, the rest is on its way. */
+.logsNote {
+  margin: 0 0 8px;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--tk-muted);
+}

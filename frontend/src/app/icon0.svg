@@ -1,0 +1,21 @@
+<!-- Favicon build of the Tickwise mark.
+
+     Two deliberate differences from `components/brand/TickwiseMark.tsx`:
+
+     1. STATIC COLOURS. Browser chrome supplies no CSS custom properties, so
+        `fill-current` / `fill-primary` would resolve to nothing here. The
+        falling bars use a mid-slate chosen to stay legible against BOTH light
+        and dark tab strips — ink would vanish on dark, near-white on light.
+     2. NO CORNER RADIUS. At 16px a 2-unit radius on an 8-unit bar eats a
+        visible share of the bar and the nine of them turn to grey mush. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <rect x="8"   y="66" width="8" height="38" fill="#8A93A3"/>
+  <rect x="20"  y="80" width="8" height="24" fill="#8A93A3"/>
+  <rect x="32"  y="92" width="8" height="12" fill="#8A93A3"/>
+  <rect x="44"  y="82" width="8" height="22" fill="#8A93A3"/>
+  <rect x="56"  y="70" width="8" height="34" fill="#8A93A3"/>
+  <rect x="68"  y="57" width="8" height="47" fill="#2EE6C9"/>
+  <rect x="80"  y="44" width="8" height="60" fill="#2EE6C9"/>
+  <rect x="92"  y="30" width="8" height="74" fill="#2EE6C9"/>
+  <rect x="104" y="16" width="8" height="88" fill="#2EE6C9"/>
+</svg>

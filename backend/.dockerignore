@@ -1,0 +1,53 @@
+# Build context for the backend image. The Dockerfile copies only package.json,
+# pnpm-lock.yaml, pnpm-workspace.yaml, tsconfig*.json, src/ and scripts/; everything
+# below is kept out so it can never reach a layer (a local .env above all).
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+*.pem
+*.key
+
+# Installed / built output (the image installs and builds its own)
+node_modules
+**/node_modules
+dist
+coverage
+.next
+*.tsbuildinfo
+
+# VCS, editor and OS noise
+.git
+.gitignore
+.gitattributes
+.DS_Store
+**/.DS_Store
+.vscode
+.idea
+.claude
+
+# Tests and test artifacts
+test
+**/*.spec.ts
+vitest.config.ts
+*.timestamp-*.mjs
+.vitest
+junit*.xml
+
+# Scratch, docs and local tooling
+__m.ts
+*.log
+*.bak
+tmp
+.tmp
+postman
+README.md
+AGENTS.md
+CLAUDE.md
+docker-compose.yml
+Dockerfile
+.dockerignore
+.nvmrc

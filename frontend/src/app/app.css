@@ -1,0 +1,1894 @@
+/*
+ * The single stylesheet entry. Imported once, from app/layout.tsx.
+ *
+ * ── WHY THE LAYER ORDER IS DECLARED FIRST ────────────────────────────────
+ *
+ * This app is mid-migration: `globals.css`, `site.css` and `admin/panel.css`
+ * are the Tickwise stylesheets that still dress every route not yet converted
+ * to the Tickwise design, and they style BARE ELEMENTS — `body`, `table`,
+ * `th, td`, `button`. Left unlayered they would outrank every Tailwind utility
+ * (unlayered CSS beats layered CSS, whatever the specificity), so a converted
+ * page's `<td className="px-4 py-3">` would still be 43px tall and 13px mono.
+ *
+ * Putting them in a `legacy` layer BELOW `components`/`utilities` inverts that:
+ * utilities win on converted pages, and legacy pages are untouched because
+ * nothing else competes for those selectors. The order is declared here, before
+ * the Tailwind import, because the FIRST `@layer` statement wins and Tailwind's
+ * own only names four of the five.
+ *
+ * `tw-base` sits above `legacy` and below `utilities`: it re-establishes the
+ * Tickwise base rules inside a converted subtree and undoes the legacy bare-
+ * element styling there. See the block at the end of this file.
+ *
+ * WHEN THE LAST LEGACY ROUTE IS CONVERTED: delete the three imports, delete the
+ * `legacy` and `tw-base` layers, move `tw-base`'s contents into `@layer base`
+ * unscoped, and drop `.tw` from the shells. Nothing else has to change.
+ */
+@layer theme, base, legacy, tw-base, tw-bridge, components, utilities;
+
+@import "tailwindcss" source(none);
+@source "../";
+@import "tw-animate-css";
+
+/* Tickwise stylesheets — see the note above. Temporary; deleted route by route. */
+@import "./globals.css" layer(legacy);
+@import "./site.css" layer(legacy);
+@import "./admin/panel.css" layer(legacy);
+
+/*
+ * Aligned onto data-theme, matching the rest of the theming — the same attribute
+ * the Tickwise pre-paint bootstrap has always set, and the same `tk-theme`
+ * storage key, so one toggle drives both design systems during the migration.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * Doryoku / Tickwise design system
+ * Palette: Midnight Indigo (dark-first)
+ * Type:    Sora (display) + Manrope (body) + JetBrains Mono
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  /*
+   * The three families come from `next/font/google` in app/layout.tsx, which
+   * self-hosts them and mints a scoped family name per font — so these MUST
+   * reference the generated variables rather than name the fonts literally.
+   * "Sora" as a string would resolve to nothing and silently fall back.
+   *
+   * `--font-mono` is also what the legacy `--mono` token in globals.css reads,
+   * which is why the JetBrains variable is `--font-mono-jb`: a `--font-mono`
+   * defined in terms of itself is invalid and would drop the whole declaration.
+   */
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-glow: var(--primary-glow);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+ * The Tickwise palette and geometry.
+ *
+ * Declared in the `theme` layer rather than unlayered so the legacy tokens in
+ * globals.css — which are set on `[data-theme="dark"]`, the same specificity as
+ * `:root` — cannot win by source order. The two token sets are disjoint after
+ * the `--accent`/`--muted` rename (see globals.css), but the layer makes that
+ * structural rather than a coincidence of ordering.
+ */
+@layer theme {
+  :root {
+    --radius: 0.625rem;
+
+    /*
+     * Horizontal edge margin for page content, site-wide. Deliberately in px,
+     * not rem: the large-viewport block below scales the root font size, and a
+     * rem gutter would compound with it.
+     *
+     * 16px at 640px-and-below, ramping to 24px and holding flat from a 720px
+     * viewport up. Above 1280 it ramps again — see the media query below.
+     */
+    --gutter: clamp(16px, 10vw - 48px, 24px);
+
+    /*
+     * Widest the page frame gets. 1536 with a 48px gutter caps *content* at
+     * 1440, and past that width the margin absorbs everything else. Content
+     * stops growing well before the viewport does on purpose: past roughly
+     * 1450px a card grid stops reading as "designed larger" and starts reading
+     * as spread out. The scale-up that makes a 1920 screen feel designed for is
+     * the root font size below, not more width.
+     */
+    --container-page: 1536px;
+
+    /*
+     * Measures for content that must not span the full frame. In rem, unlike
+     * the two above, and that is the point: they are measured in characters, so
+     * they track the root font size and hold the same characters-per-line as
+     * the type scales up.
+     */
+    --container-narrow: 56rem;
+    --container-prose: 48rem;
+
+    /* Midnight Indigo — dark by default */
+    --background: oklch(0.14 0.03 275);
+    --foreground: oklch(0.97 0.01 260);
+    --surface: oklch(0.18 0.035 275);
+    --surface-2: oklch(0.22 0.04 275);
+
+    --card: oklch(0.18 0.035 275);
+    --card-foreground: oklch(0.97 0.01 260);
+
+    --popover: oklch(0.2 0.04 275);
+    --popover-foreground: oklch(0.97 0.01 260);
+
+    --primary: oklch(0.62 0.22 275);
+    --primary-foreground: oklch(0.99 0.005 260);
+    --primary-glow: oklch(0.72 0.2 275);
+
+    --secondary: oklch(0.26 0.05 275);
+    --secondary-foreground: oklch(0.97 0.01 260);
+
+    --muted: oklch(0.24 0.04 275);
+    --muted-foreground: oklch(0.68 0.03 265);
+
+    --accent: oklch(0.3 0.07 275);
+    --accent-foreground: oklch(0.98 0.01 260);
+
+    --destructive: oklch(0.62 0.24 22);
+    --destructive-foreground: oklch(0.99 0.005 0);
+
+    --success: oklch(0.72 0.17 155);
+    --success-foreground: oklch(0.12 0.02 155);
+
+    --warning: oklch(0.78 0.16 75);
+    --warning-foreground: oklch(0.15 0.02 75);
+
+    --border: oklch(0.3 0.04 275 / 60%);
+    --input: oklch(0.28 0.04 275);
+    --ring: oklch(0.62 0.22 275);
+
+    --chart-1: oklch(0.62 0.22 275);
+    --chart-2: oklch(0.72 0.17 155);
+    --chart-3: oklch(0.78 0.16 75);
+    --chart-4: oklch(0.68 0.2 320);
+    --chart-5: oklch(0.68 0.16 200);
+
+    --sidebar: oklch(0.12 0.03 275);
+    --sidebar-foreground: oklch(0.9 0.02 265);
+    --sidebar-primary: oklch(0.62 0.22 275);
+    --sidebar-primary-foreground: oklch(0.99 0.005 260);
+    --sidebar-accent: oklch(0.22 0.04 275);
+    --sidebar-accent-foreground: oklch(0.97 0.01 260);
+    --sidebar-border: oklch(0.28 0.04 275 / 60%);
+    --sidebar-ring: oklch(0.62 0.22 275);
+
+    --gradient-hero:
+      radial-gradient(
+        ellipse 80% 60% at 50% 0%,
+        color-mix(in oklab, var(--primary) 35%, transparent) 0%,
+        transparent 60%
+      ),
+      linear-gradient(180deg, var(--background), oklch(0.1 0.025 275));
+    --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow));
+    --shadow-glow: 0 20px 60px -20px color-mix(in oklab, var(--primary) 45%, transparent);
+    --shadow-card:
+      0 1px 0 0 color-mix(in oklab, white 4%, transparent) inset,
+      0 10px 30px -20px oklch(0 0 0 / 60%);
+  }
+
+  /*
+   * Large-viewport scale-up. Everything about how the site looks above 1280px
+   * lives in these four lines; below 1280px nothing here applies.
+   *
+   * `80rem` is 1280px. rem in a *media query* resolves against the browser's
+   * initial font size, not the one set below, so this threshold — and every
+   * Tailwind breakpoint — stays put regardless of the scaling.
+   *
+   * Scaling the root font size, rather than retuning type and spacing per
+   * component, is what keeps the enlargement coherent: Tailwind v4 derives
+   * spacing from `--spacing: .25rem` and every `--text-*` from rem, so one
+   * value moves type, rhythm, padding, gaps and radii by an identical ratio.
+   */
+  @media (min-width: 80rem) {
+    :root {
+      /* 24px at 1280 -> 48px at 1536, then flat — the ceiling is reached
+         exactly where --container-page caps, so content grows monotonically
+         and then holds. */
+      --gutter: clamp(24px, 9.375vw - 96px, 48px);
+      /* 16px at 1280 -> 18px at 1920, then flat. */
+      font-size: clamp(1rem, 0.75rem + 0.3125vw, 1.125rem);
+    }
+  }
+
+  /*
+   * Light theme. Selected by `data-theme="light"` on <html>. The dark values
+   * above are the default, so the site renders dark unless a visitor has
+   * explicitly chosen light.
+   *
+   * Not overridden, deliberately: --gradient-primary and --shadow-glow are
+   * composed from var(--primary)/var(--primary-glow) so they adapt on their
+   * own, and --radius/--gutter/--container-* are geometry, not colour.
+   */
+  [data-theme="light"] {
+    --background: oklch(0.985 0.005 260);
+    --foreground: oklch(0.16 0.03 275);
+    --surface: oklch(1 0 0);
+    --surface-2: oklch(0.96 0.01 260);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.16 0.03 275);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.16 0.03 275);
+    --primary: oklch(0.5 0.22 275);
+    --primary-foreground: oklch(0.99 0.005 260);
+    --primary-glow: oklch(0.6 0.22 275);
+    --secondary: oklch(0.94 0.015 260);
+    --secondary-foreground: oklch(0.16 0.03 275);
+    --muted: oklch(0.94 0.015 260);
+    --muted-foreground: oklch(0.45 0.03 265);
+    --accent: oklch(0.92 0.02 275);
+    --accent-foreground: oklch(0.16 0.03 275);
+    --border: oklch(0.88 0.015 260);
+    --input: oklch(0.9 0.015 260);
+    --ring: oklch(0.5 0.22 275);
+
+    /* Status colours darkened for contrast against white rather than reused
+       from the dark palette, where they sit on oklch(0.18) surfaces. */
+    --destructive: oklch(0.55 0.23 22);
+    --destructive-foreground: oklch(0.99 0.005 0);
+    --success: oklch(0.52 0.15 155);
+    --success-foreground: oklch(0.99 0.01 155);
+    --warning: oklch(0.56 0.14 75);
+    --warning-foreground: oklch(0.99 0.01 75);
+
+    --chart-1: oklch(0.5 0.22 275);
+    --chart-2: oklch(0.52 0.15 155);
+    --chart-3: oklch(0.56 0.14 75);
+    --chart-4: oklch(0.55 0.2 320);
+    --chart-5: oklch(0.55 0.16 200);
+
+    --sidebar: oklch(0.97 0.008 260);
+    --sidebar-foreground: oklch(0.25 0.03 275);
+    --sidebar-primary: oklch(0.5 0.22 275);
+    --sidebar-primary-foreground: oklch(0.99 0.005 260);
+    --sidebar-accent: oklch(0.93 0.02 275);
+    --sidebar-accent-foreground: oklch(0.16 0.03 275);
+    --sidebar-border: oklch(0.87 0.015 260 / 70%);
+    --sidebar-ring: oklch(0.5 0.22 275);
+
+    /* The dark hero gradient ends on a near-black stop and the card shadow uses
+       a white inset highlight over a heavy black drop — both invert badly. */
+    --gradient-hero:
+      radial-gradient(
+        ellipse 80% 60% at 50% 0%,
+        color-mix(in oklab, var(--primary) 14%, transparent) 0%,
+        transparent 60%
+      ),
+      linear-gradient(180deg, var(--background), oklch(0.95 0.01 260));
+    --shadow-card:
+      0 1px 0 0 color-mix(in oklab, white 60%, transparent) inset,
+      0 10px 30px -22px oklch(0.2 0.03 275 / 22%);
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    /*
+     * Contains decorative horizontal bleed. The hero's orbit rings and ambient
+     * orbs are absolutely positioned past the viewport edge on purpose, and
+     * several sit outside any clipping ancestor.
+     *
+     * `clip`, not `hidden`: `overflow: hidden` turns the element into a scroll
+     * container, which breaks `position: sticky` on descendants — and the
+     * marketing header is sticky. `clip` crops without that side effect.
+     */
+    overflow-x: clip;
+  }
+}
+
+/*
+ * ── The converted-subtree base ───────────────────────────────────────────
+ *
+ * Everything the Tickwise design assumes about bare elements, scoped to `.tw`
+ * and layered ABOVE `legacy` so it beats globals.css's `body`, `table`,
+ * `th, td` and `tbody tr` rules inside a converted page — and only inside one.
+ * A layer wins over a lower layer regardless of specificity, which is what lets
+ * `.tw td` (0,1,1) undo `td` (0,0,1) without an `!important` anywhere.
+ *
+ * Shells put `.tw` on their outermost element; see SiteShell/PortalShell.
+ * On the day the last legacy route is converted this whole block becomes the
+ * unscoped `@layer base` it started life as in the design source.
+ */
+@layer tw-base {
+  .tw {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    letter-spacing: normal;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .tw :is(h1, h2, h3, h4) {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  .tw :is(code, pre, kbd, samp) {
+    font-family: var(--font-mono);
+  }
+
+  /* Undo the legacy table chrome — 8px row spacing, 43px cells, panel-filled
+     rows with an outline — so a converted table is a plain grid the utilities
+     dress themselves. */
+  .tw table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  .tw :is(th, td) {
+    padding: 0;
+    height: auto;
+    white-space: normal;
+    text-align: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    border-radius: 0;
+  }
+  .tw tbody tr {
+    background: none;
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+/*
+ * ── The legacy-class bridge ──────────────────────────────────────────────
+ *
+ * A converted PAGE can still contain components that have not been rewritten
+ * yet — the portal's email controls, the OTP entry, the pay panels, the admin
+ * plan editor. They carry Tickwise class names (`.admin-card`, `.admin-btn`,
+ * `.admin-note`, …), and inside a `.tw` subtree those rendered in the old teal
+ * palette against a Midnight Indigo page: two visual languages on one screen.
+ *
+ * This layer re-paints those class names onto the design tokens whenever they
+ * appear inside `.tw`. It changes COLOUR, RADIUS and TYPE — never layout — so a
+ * component looks native the moment its page is converted, and its markup can
+ * be rewritten properly later with no visual step change when it is.
+ *
+ * It is a bridge, not a destination. Each rule dies with the last component
+ * that uses its class, and the whole layer goes with the `legacy` one.
+ */
+@layer tw-bridge {
+  /*
+   * ── The accent shadow, and why it is one rule instead of fifty ──────────
+   *
+   * The Tickwise sheets colour everything from `--tk-accent` (turquoise) and
+   * `--green`, which is defined as `var(--tk-accent)`. Hunting those down class
+   * by class inside a converted page is endless — the position modal alone
+   * paints its left rule, its in-range chip, its tx-hash pills, its active tab
+   * and its focus rings from them.
+   *
+   * Redefining the tokens on `.tw` shadows them for the entire subtree, so every
+   * legacy rule that references one resolves to the design's primary instead.
+   * That works even though the pre-paint bootstrap sets `--tk-accent` INLINE on
+   * <html>: an inline style on an ancestor is inherited, and a definition on a
+   * descendant beats an inherited value.
+   *
+   * `--green` has to be restated rather than left to follow `--tk-accent`,
+   * because custom-property substitution resolves per element at computed-value
+   * time: `--green` computes on <html>, where the accent is still turquoise, and
+   * descendants inherit that resolved colour rather than re-deriving it.
+   *
+   * `--green-soft` and `--red` are deliberately NOT touched — those are the
+   * gain/loss semantics on the dashboard, and they must stay green and red.
+   */
+  .tw {
+    --tk-accent: var(--color-primary);
+    --tk-accent-ink: var(--color-primary-foreground);
+    --green: var(--color-primary);
+  }
+
+  .tw .admin-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  /*
+   * A card inside a card is a SECTION, not a card.
+   *
+   * The billing page composes three components that each render their own
+   * `.admin-card` — the plan state, the manage actions, the plan catalogue —
+   * and they belong in one card, not three stacked boxes each repeating the
+   * frame. Collapsing the inner chrome here means the components keep their
+   * own markup and stay usable standalone; only their nesting changes what
+   * they look like. Sections are separated by a rule instead.
+   */
+  .tw .admin-card .admin-card {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+  }
+  .tw .admin-card .admin-card + .admin-card {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /*
+   * FOUR MORE VARIANTS THE BRIDGE HAD SILENTLY EATEN, found by auditing every
+   * legacy rule that names a class this layer also styles.
+   *
+   * Each is a modifier declared in `panel.css`/`globals.css` on the same element
+   * and the same property as a bridge base rule — so the base won on layer
+   * order and the modifier stopped existing. None of them failed loudly.
+   *
+   * `.danger` is the one that mattered: every Revoke button in the portal and
+   * admin (`/portal/keys`, `/admin`, `/admin/plans`, `SignInMethods`) was
+   * rendering as the PRIMARY accent gradient, so the destructive action looked
+   * exactly like the affirmative one.
+   */
+  .tw .admin-btn.danger {
+    background: transparent;
+    color: var(--color-destructive);
+    border: 1px solid color-mix(in oklab, var(--color-destructive) 45%, transparent);
+    box-shadow: none;
+  }
+
+  .tw .admin-btn.danger:hover {
+    background: color-mix(in oklab, var(--color-destructive) 12%, transparent);
+    filter: none;
+  }
+
+  /* `.sm` set `font-size: 12px`; the bridge's `.admin-btn` set 0.875rem over it,
+     so every compact button rendered full size. */
+  .tw .admin-btn.sm {
+    font-size: 0.75rem;
+  }
+
+  .tw .admin-pill.revoked {
+    color: var(--color-destructive);
+    border-color: color-mix(in oklab, var(--color-destructive) 45%, transparent);
+  }
+
+  /* The OTP box is deliberately six wide-spaced glyphs — `globals.css` sets 18px
+     and the bridge's input rule was overriding it with 0.875rem, shrinking the
+     one field whose whole design is being big enough to proof-read. */
+  .tw .admin-input.otpInput {
+    font-size: 1.125rem;
+  }
+
+  /*
+   * Dialogs get the ORDINARY border, not the accent one.
+   *
+   * `.payModalCard` and `.revealCard` are outlined in `--tk-accent` while
+   * `.confirmCard` uses `--line`; that 1px accent ring was how a dialog said "I
+   * am a dialog" when the backdrop was the old flat wash. The backdrop now
+   * blurs, the shadow token carries the elevation, and against Midnight Indigo a
+   * saturated 1px outline reads as a focus ring on the whole card. Bringing them
+   * to the border token also makes the three dialogs agree with each other.
+   */
+  .tw :is(.payModalCard, .revealCard, .confirmCard, .adminModalCard) {
+    border-color: var(--color-border);
+    /* Not `--shadow-card`: that token is a 1px inset plus a 10px hairline, tuned
+       for a panel sitting ON the page. A dialog floats above it and needs the
+       elevation to say so once the accent ring is gone. */
+    box-shadow: 0 24px 60px -24px oklch(0 0 0 / 55%);
+  }
+
+  /*
+   * THE ADMIN DIALOG'S SURFACE, in tokens rather than the legacy greys.
+   *
+   * `site.css` paints it `--panel` / `--panel-2` / `--line` / `--tk-muted` —
+   * `#14151d`, a NEUTRAL grey. Every surface it floats over is Midnight Indigo
+   * (`--surface` is `oklch(0.18 0.035 275)`), so the card read as a flat grey
+   * slab with a colder hue than the page behind it and than the usage panel
+   * nested inside it: the one element that is supposed to be the closest thing
+   * to the reader was the only one not in the palette.
+   *
+   * `--color-popover` (L 0.2), not `--color-surface` (0.18): this is the app's
+   * elevated token, and it is what lifts the card off `.admin-card`'s own
+   * background rather than matching it. Only `.adminModalCard` is bridged —
+   * `.payModalCard` / `.revealCard` / `.confirmCard` have the same legacy fill
+   * and the same argument applies to them, but they are portal surfaces and
+   * repainting them is not this change.
+   */
+  .tw .adminModalCard {
+    background: var(--color-popover);
+    color: var(--color-popover-foreground);
+  }
+
+  /* The backdrop's wash, from the page's own background token for the same
+     reason — `--bg` is the neutral grey's partner and tinted the dimmed list
+     green-grey against an indigo shell. */
+  .tw .adminModalBackdrop {
+    background: color-mix(in oklab, var(--color-background) 78%, transparent);
+  }
+
+  .tw .adminModalClose {
+    background: var(--color-surface-2);
+    border-color: var(--color-border);
+    color: var(--color-muted-foreground);
+  }
+
+  .tw .adminModalClose:hover {
+    color: var(--color-foreground);
+    border-color: var(--color-primary);
+  }
+
+  /* The one sentence the customer must read to act, given the weight to be read
+     first: the two paragraphs under it are muted, so without this the panel
+     opens on three tone-identical blocks of prose. */
+  .tw .payLead {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--color-foreground);
+  }
+
+  /*
+   * The pay dialog un-cards its panel AGAIN, here, because the rule that already
+   * did it LOST.
+   *
+   * `site.css` says `.payModalCard > .admin-card { border: 0; padding: 0; … }`,
+   * and it is correct and dead: `site.css` is imported into the `legacy` layer
+   * and this is `tw-bridge`, a LATER layer, so `.tw .admin-card`'s frame wins on
+   * layer order however specific the legacy selector is. Specificity never enters
+   * into it — that is the whole point of layers, and the trap when a migration
+   * adds one under an existing stylesheet.
+   *
+   * Visible as a second border and background inside the dialog, and — from the
+   * card's `margin-bottom: 1.5rem` — a band of dead space between the panel and
+   * the dialog's own bottom edge.
+   */
+  /* `.adminModalCard` is here for exactly the same reason — its `site.css` twin
+     is in the `legacy` layer and loses to `.tw .admin-card` on layer order. The
+     admin overlay wraps `ClientDetail`, which renders an `.admin-card` because
+     it used to sit inline in the table. */
+  .tw :is(.payModalCard, .adminModalCard) > .admin-card {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  /*
+   * `.emptyState`'s `min-height: 280px` is sized for the DASHBOARD, where it
+   * stands in for a whole absent table and a short box would read as a glitch.
+   * Inside a portal or admin card it is 280px of centred nothing wrapped around
+   * two lines of text — the empty invoice history was taller than a history with
+   * five invoices in it. Scoped to `.admin-card` so the dashboard keeps its own
+   * proportions.
+   */
+  .tw .admin-card .emptyState {
+    min-height: 0;
+    padding: 2rem 1rem;
+  }
+
+  /*
+   * …and their COLOURS, which were never bridged at all: `--panel` (#14151d)
+   * and `--line` are the pre-migration palette, so an empty state inside a
+   * `bg-surface` card read as a hole punched in it. Geometry is untouched — the
+   * dashboard's 280px stand-in for a whole absent table is deliberate.
+   */
+  .tw :is(.emptyState, .notice, .logsEmpty) {
+    background: color-mix(in oklab, var(--color-surface-2) 55%, transparent);
+    border-color: var(--color-border);
+  }
+
+  .tw .admin-h {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-muted-foreground);
+    margin: 0 0 0.875rem;
+  }
+
+  .tw .admin-h1 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-foreground);
+  }
+
+  .tw .admin-note {
+    font-size: 0.8125rem;
+    color: var(--color-muted-foreground);
+  }
+
+  .tw .admin-error {
+    color: var(--color-destructive);
+    font-size: 0.8125rem;
+  }
+
+  .tw .admin-ok {
+    color: var(--color-success);
+    font-size: 0.8125rem;
+  }
+
+  /* Buttons. The gradient fill is the design's primary control; `ghost` and
+     `danger` keep their outline treatment so the three stay distinguishable —
+     the reason the confirm dialog needed fixing in the first place. */
+  .tw .admin-btn {
+    background: var(--gradient-primary);
+    color: var(--color-primary-foreground);
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-glow);
+    transition: filter 0.15s, opacity 0.15s;
+  }
+  .tw .admin-btn:hover {
+    filter: brightness(1.08);
+  }
+  .tw .admin-btn.ghost {
+    background: transparent;
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+    box-shadow: none;
+  }
+  .tw .admin-btn.ghost:hover {
+    background: var(--color-surface-2);
+    filter: none;
+  }
+  .tw .admin-btn.danger,
+  .tw .admin-btn.confirmDanger {
+    background: transparent;
+    color: var(--color-destructive);
+    border: 1px solid color-mix(in oklab, var(--color-destructive) 45%, transparent);
+    box-shadow: none;
+  }
+  .tw .admin-btn.danger:hover,
+  .tw .admin-btn.confirmDanger:hover {
+    background: color-mix(in oklab, var(--color-destructive) 12%, transparent);
+    filter: none;
+  }
+
+  .tw :is(.admin-input, .admin-select, .otpInput) {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-input);
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+  }
+  .tw :is(.admin-input, .admin-select)::placeholder {
+    color: var(--color-muted-foreground);
+  }
+  .tw :is(.admin-input, .admin-select, .otpInput):focus {
+    outline: none;
+    border-color: var(--color-ring);
+    box-shadow: 0 0 0 1px var(--color-ring);
+  }
+
+  /* `.tw table` in tw-base flattened every table to a bare grid, which is right
+     for a rewritten one and wrong for a legacy `.admin-table` still relying on
+     its own padding. These put its own chrome back, in the new palette. */
+  .tw .admin-table :is(th, td) {
+    padding: 0.625rem 0.75rem;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.8125rem;
+  }
+  .tw .admin-table th {
+    color: var(--color-muted-foreground);
+    font-weight: 500;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .tw .admin-table tbody tr:hover :is(td, th) {
+    background: color-mix(in oklab, var(--color-surface-2) 60%, transparent);
+  }
+
+  /*
+   * ── A row expanded in place ─────────────────────────────────────────────
+   *
+   * `/admin` opens a client's Manage panel as a second `<tr>` immediately below
+   * the row it belongs to. Two classes: `.admin-detail-open` marks the client
+   * row while its panel is showing, `.admin-detail-row` is the row holding the
+   * panel in one full-width cell.
+   *
+   * One primary wash carried across both rows, plus a 2px rule down their left
+   * edge, is what says the panel belongs to the row above rather than being the
+   * next entry in the list. Primary and not the `surface-2` fill directly above,
+   * because that fill is HOVER: sharing it would make an open row and a
+   * pointed-at row look the same. 8% where `.infoBanner` uses 10% — this covers
+   * a whole panel, not a sentence.
+   *
+   * Both selectors tie the hover rule on specificity and come after it, so the
+   * wash wins: without that, dragging the pointer across the panel would flash a
+   * hover tint over the entire thing. The open row trades its hover feedback for
+   * the same reason, which costs nothing — it already reads as active.
+   *
+   * The accent is an inset shadow, not a `border-left`: a real border on the
+   * first cell of two rows out of many widens that column's border box for those
+   * rows alone, so the client's name would jump 2px sideways on every toggle.
+   */
+  .tw .admin-table tbody :is(tr.admin-detail-open, tr.admin-detail-row) > td {
+    background: color-mix(in oklab, var(--color-primary) 8%, transparent);
+  }
+  .tw .admin-table tbody :is(tr.admin-detail-open, tr.admin-detail-row) > td:first-child {
+    box-shadow: inset 2px 0 0 var(--color-primary);
+  }
+  /* The wash runs from the row into its panel, so the hairline between the two
+     goes — as a transparent colour rather than `0`, which would drop the table
+     1px every time a row is opened. */
+  .tw .admin-table tbody tr.admin-detail-open > td {
+    border-bottom-color: transparent;
+  }
+  /* What this cell holds is a panel, not a value, so the grid's cell padding and
+     13px table type both go. The 1rem inset sits just inside the accent rule and
+     one notch in from the 0.75rem of the row above, which reads as nesting. */
+  .tw .admin-table tbody tr.admin-detail-row > td {
+    padding: 1.25rem 1rem 1.5rem;
+    font-size: 0.875rem;
+  }
+
+  /*
+   * The three rules that follow exist only because this cell holds TABLES —
+   * the keys grid, the monthly rollup, the usage detail panel — inside a cell
+   * of another table. Every `.admin-table` rule above is a descendant selector,
+   * so each one now reaches content it was never written for.
+   *
+   * 1. Hover. The pointer anywhere in the panel hovers the `<tr>` that CONTAINS
+   *    it, so the rule above (and `.admin-table tr:hover td` in the legacy
+   *    layer, which this outranks by layer) lights up every cell of the keys
+   *    grid at once instead of the one row under the cursor. Scoped to cells
+   *    nested inside the panel cell, which leaves the panel cell's own wash be.
+   */
+  .tw .admin-table tbody tr.admin-detail-row:hover > td :is(td, th) {
+    background: transparent;
+  }
+  /* 2. …and the inner row's own hover back, above that neutraliser. */
+  .tw .admin-table tbody tr.admin-detail-row .admin-table tbody tr:hover :is(td, th) {
+    background: color-mix(in oklab, var(--color-surface-2) 60%, transparent);
+  }
+  /*
+   * 3. The legacy tr-level hover, `.admin-table tbody tr:hover` in panel.css,
+   *    paints the ROW — visible through the wash, which is 8% of primary and
+   *    lets what is under it show. Both of these rows are already marked;
+   *    tinting them on hover as well only muddies the wash.
+   */
+  .tw .admin-table tbody :is(tr.admin-detail-open, tr.admin-detail-row):hover {
+    background: transparent;
+  }
+  /*
+   * The usage detail panel is Tailwind, not `.admin-table` — but the legacy
+   * cell chrome above reaches its tables by descent now that they sit inside
+   * one, doubling their `divide-y` hairlines and pulling them off the 14px the
+   * same panel renders at on `/admin/clients/[id]`. Cell padding needs no
+   * repair: `px-4 py-2` is a utility, and the utilities layer outranks this one.
+   *
+   * Every property the grid sets DIRECTLY on a cell has to be listed: a
+   * directly targeted declaration beats an inherited value however specific the
+   * inherited one's source, so leaving `letter-spacing`, `font-weight`,
+   * `text-transform` and `color` out left the panel's breakdown headers wearing
+   * the outer grid's 0.06em/500 inside the Manage row and the panel's own
+   * `tracking-widest` on `/admin/clients/[id]` — the same table, two faces.
+   */
+  .tw .admin-table tbody tr.admin-detail-row table:not(.admin-table) :is(th, td) {
+    border-bottom: 0;
+    font-size: inherit;
+    letter-spacing: inherit;
+    font-weight: inherit;
+    text-transform: inherit;
+    color: inherit;
+  }
+
+  /*
+   * ── Narrow-screen stacking, bridged ─────────────────────────────────────
+   *
+   * `panel.css`'s `.stackTable` block turns a row into a card below 720px, and
+   * inside `.tw` its CELL rules were dead: `.tw .admin-table :is(th, td)` above
+   * sits in this layer while `.stackTable td` sits in `legacy`, so layer order —
+   * not specificity — kept the grid's 0.75rem inset and its `border-bottom`
+   * hairline on every stacked cell, doubled against the `td + td` border-top
+   * legacy still applied. A 24px inset inside a 12px card, with two hairlines
+   * between every pair of cells.
+   *
+   * The row fill goes the same way: `tw-base`'s `.tw tbody tr { background:
+   * none }` outranks `.stackTable tr { background: var(--panel-2) }`, so the
+   * cards had no fill at all. Restated here on the tokens rather than on
+   * `--panel-2` (#1a1c26), which is the pre-migration palette.
+   */
+  @media (max-width: 720px) {
+    .tw .admin-table.stackTable :is(th, td) {
+      padding: 0.4375rem 0;
+      border-bottom: 0;
+    }
+    .tw .admin-table.stackTable td + td {
+      border-top: 1px solid var(--color-border);
+    }
+    .tw .admin-table.stackTable tbody tr {
+      background: color-mix(in oklab, var(--color-surface-2) 55%, transparent);
+      border-color: var(--color-border);
+    }
+
+    /*
+     * ── The card shape, bridged ────────────────────────────────────────────
+     *
+     * `panel.css`'s `.cardTable` needs the same repairs as `.stackTable` above
+     * and for the same reason — layer order, not specificity:
+     *   - `.tw .admin-table :is(th, td)` in THIS layer keeps its 0.625rem inset
+     *     and its `border-bottom` on cells `legacy` has already zeroed, which
+     *     inside an 8px/10px card is a 20px well with a hairline under every
+     *     line of it;
+     *   - `tw-base`'s `.tw :is(th, td) { white-space: normal }` undoes the
+     *     single ellipsised line every card field depends on, and with it the
+     *     guarantee that no name, address or key prefix can set the card width;
+     *   - `tw-base`'s `.tw tbody tr { background: none }` leaves the cards with
+     *     no fill at all.
+     * Restated on the design tokens, not on `--line` / `--panel-2`, which are
+     * the pre-migration palette.
+     *
+     * Child combinators throughout, as in `panel.css`. That is what lets the
+     * clients table hold a whole Tailwind panel in one of its cells without the
+     * card shape reaching the tables inside it — the repair cluster that used to
+     * restore `display: table` / `table-row` / `table-cell` on those, written
+     * for `.stackTable`'s descendant selectors, is deleted rather than re-keyed.
+     */
+    .tw .admin-table.cardTable > tbody > tr > td {
+      padding: 0;
+      border-bottom: 0;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /*
+     * The plan editor's cells, restated for the same layer-order reason as
+     * everything else in this block: `panel.css` already says all of this and
+     * loses to the `.tw .admin-table.cardTable > tbody > tr > td` rule three
+     * lines above. Every cell there is a FORM FIELD — it has to wrap and show
+     * its `data-label`, not clip to one ellipsised line. The label colour comes
+     * off the design token rather than `--faint`, which is the pre-migration
+     * palette.
+     */
+    .tw .admin-table.cardTable.plansCards > tbody > tr > td {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
+    .tw .admin-table.cardTable.plansCards > tbody > tr > td[data-label]::before {
+      color: var(--color-muted-foreground);
+    }
+
+    /* A cell that spans the card holds a panel, a form or a sentence — never a
+       value. `white-space` inherits, so leaving `nowrap` on would clip the whole
+       subtree to one line. */
+    .tw .admin-table.cardTable > tbody > tr > td[colspan] {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
+    .tw .admin-table.cardTable > tbody > tr {
+      background: color-mix(in oklab, var(--color-surface-2) 55%, transparent);
+      border-color: var(--color-border);
+    }
+    /* `.tw .admin-table tbody tr:hover :is(td, th)` would otherwise light the
+       whole card as if it were pressed — and on a touch surface that state
+       sticks after the tap. */
+    .tw .admin-table.cardTable > tbody > tr:hover > :is(td, th) {
+      background: transparent;
+    }
+    /* Rows that are only a spanning cell carry no card chrome (`panel.css`), so
+       the fill and border-colour above have nothing to apply to either. */
+    .tw .admin-table.cardTable > tbody > tr:not(.admin-detail-row):has(> td[colspan]:only-child) {
+      background: none;
+    }
+
+    /*
+     * A row expanded in place, once the rows are cards.
+     *
+     * Cards would otherwise break the pair apart into two detached boxes with
+     * the panel floating below its client — so the two are welded into one: the
+     * client row loses its bottom edge and its lower corners, the panel row
+     * loses its top edge and its upper corners, and the gap between them goes.
+     *
+     * The accent and the wash sit on the `tr`, not on `> td:first-child`. As
+     * cards, `td:first-child` is only the identity line — a 2px rule beside one
+     * field rather than down the whole card — and a wash on the cells leaves the
+     * row's own padding unpainted, which reads as an inset band. Safe only here:
+     * at desktop width a `tr` is not a block box and neither would paint. The
+     * horizontal inset shadow costs no layout, same reason as the desktop rule
+     * it replaces.
+     */
+    .tw .admin-table.cardTable > tbody > :is(tr.admin-detail-open, tr.admin-detail-row) {
+      background: color-mix(in oklab, var(--color-primary) 8%, transparent);
+      box-shadow: inset 2px 0 0 var(--color-primary);
+    }
+    .tw .admin-table.cardTable > tbody > :is(tr.admin-detail-open, tr.admin-detail-row) > td {
+      background: transparent;
+      box-shadow: none;
+    }
+    .tw .admin-table.cardTable > tbody > tr.admin-detail-open {
+      margin-bottom: 0;
+      border-bottom: 0;
+      border-end-start-radius: 0;
+      border-end-end-radius: 0;
+    }
+    /*
+     * The panel takes the SAME 10px inset as the card rows around it, and the
+     * reason is the weld: this row and the client row above it are one card, so
+     * a panel bled to the card's inner edge starts 10px left of the name it
+     * belongs to and finishes hard against the right border, while its own left
+     * edge sits 1px off the 2px accent rule. Measured at 375px, that put the
+     * plan select, the Issue-key form and every nested card flush to both edges
+     * — one undifferentiated slab with no inside.
+     *
+     * This costs 20px of a 293px card, which an earlier pass spent on the
+     * breakdowns instead. That trade is off: the width it bought is invisible
+     * next to content touching its own frame, and `.admin-card`'s 1rem mobile
+     * padding below already returns more than this takes.
+     */
+    .tw .admin-table.cardTable > tbody > tr.admin-detail-row {
+      border-top: 0;
+      border-start-start-radius: 0;
+      border-start-end-radius: 0;
+      padding: 0 10px 10px;
+      /* One spanning cell and an empty second track: the track collapses, the
+         gap beside it does not, and the panel comes out 8px short of the card. */
+      column-gap: 0;
+    }
+    /*
+     * `overflow-wrap: normal` is a GUARD, not a reset — `.cardTable` never
+     * grants `anywhere` in the first place. Stated anyway because the value is
+     * inherited and this cell is the one that holds labels: applied to the
+     * panel's own tiles, `anywhere` broke them mid-token — measured, the usage
+     * tile read "UNITS/RE / Q", the same defect as the "REQUEST / S" the short
+     * mobile labels were added for. The panel's own `break-words` / `break-all`
+     * utilities are in a later layer and still win where a component wants a
+     * hard break. */
+    .tw .admin-table.cardTable > tbody > tr.admin-detail-row > td {
+      padding: 10px 0 0;
+      overflow-wrap: normal;
+    }
+
+    /*
+     * ── Sections inside the panel ──────────────────────────────────────────
+     *
+     * Five stacked blocks — plan, key issuing, the keys list, the usage detail
+     * and the monthly rollup — separated by nothing but 12–18px of margin. At
+     * phone width, where each is full-bleed across the panel and two of them are
+     * themselves grids of cards, that margin does not read as a boundary: the
+     * whole panel arrives as one column of controls with no telling where one
+     * job ends and the next begins.
+     *
+     * A hairline is the separator the rest of the app already uses for exactly
+     * this (`.admin-card .admin-card + .admin-card` above, the table row rules).
+     * Marked at the call site rather than derived from `> * + *`, because the
+     * panel's children are not one per section — the issuing form owns its hint
+     * line and its one-time-key block — and an nth-child rule would silently
+     * re-cut the panel the next time a paragraph is added.
+     *
+     * TWO HOSTS, and the second was a regression when the Manage panel became a
+     * dialog. `ClientDetail` marks these sections but no longer renders in an
+     * expanded row — it is `.adminModalCard`'s child — so a selector naming only
+     * `tr.admin-detail-row` silently stopped matching and the phone-width panel
+     * went back to one undifferentiated column. The keys table's origins editor
+     * IS still a detail row, so both arms are live. Still this breakpoint only:
+     * desktop reads fine at 1rem of cell padding.
+     */
+    .tw
+      :is(.admin-table.cardTable > tbody > tr.admin-detail-row, .adminModalCard)
+      .adminPanelSection {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--color-border);
+    }
+
+    /*
+     * ── Width recovery ─────────────────────────────────────────────────────
+     *
+     * Measured chain at 375px: 375 − 32 page gutter = 343 → −48 of `.admin-card`
+     * padding = 293 → −20 of card-row padding = 273 → the panel's own insets.
+     * A 1.5rem inset is right for a 1280px column and is 14% of a phone's width
+     * spent on nothing. 1rem returns 16px to every table, tile row and panel on
+     * both admin and portal, below 720px only.
+     */
+    .tw .admin-card {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+
+  /*
+   * ── The 721–1024px band ─────────────────────────────────────────────────
+   *
+   * `globals.css` turns `.tableWrap { overflow-x: visible }` on below 1024px so
+   * the positions dashboard, which collapses into cards there, has nothing left
+   * to drag sideways. Neither `.stackTable` nor `.cardTable` collapses until
+   * 720px, which left a 300px band where a bridged table neither reshaped nor
+   * scrolled and `body`'s `overflow-x: clip` simply ate the columns past the
+   * fold.
+   *
+   * `site.css`'s `.portalShell .tableWrap { overflow-x: auto }` was meant to
+   * cover this and matches nothing: the portal shell wears `.tw` now and has
+   * carried no `.portalShell` class since the migration. Restored here on the
+   * wrappers that actually reshape, so the dashboard's card behaviour is
+   * untouched — a `display: block` table keeps reporting its column-sum
+   * `scrollWidth`, and switching its wrapper back on would give it a phantom
+   * scroll range over nothing.
+   *
+   * THE TWO QUERIES ARE DISJOINT ON PURPOSE. They were `max-width: 1024px` and
+   * `max-width: 720px` with the same 0,3,0 selector, overlapping below 720px and
+   * decided by nothing but source order — so moving the narrower block above the
+   * wider one, which reads as the tidier order, would silently give every
+   * reshaped table a phantom sideways drag at phone width. A `min-width: 721px`
+   * floor on the band makes the pair order-independent instead.
+   */
+  @media (min-width: 721px) and (max-width: 1024px) {
+    .tw .stackTableWrap.tableWrap {
+      overflow-x: auto;
+    }
+  }
+  /* …and nothing to scroll once the cards take over. */
+  @media (max-width: 720px) {
+    .tw .stackTableWrap.tableWrap {
+      overflow-x: visible;
+      padding: 0;
+    }
+  }
+
+  .tw .infoBanner {
+    background: color-mix(in oklab, var(--color-primary) 10%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-primary) 35%, transparent);
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+  }
+  .tw .infoBanner span {
+    color: var(--color-muted-foreground);
+  }
+
+  .tw .statTile {
+    background: color-mix(in oklab, var(--color-surface-2) 55%, transparent);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+  .tw .statTile span {
+    color: var(--color-muted-foreground);
+  }
+  .tw .statTile strong {
+    font-family: var(--font-display);
+    color: var(--color-foreground);
+  }
+
+  .tw .admin-key {
+    background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-primary) 45%, transparent);
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+  }
+
+  .tw :is(.quotaBar, .payInstr, .tableWrap, .stackTableWrap) {
+    border-color: var(--color-border);
+  }
+  .tw .quotaFill {
+    background: var(--gradient-primary);
+  }
+  .tw .quotaFill.warn {
+    background: var(--color-warning);
+  }
+  .tw .quotaFill.over {
+    background: var(--color-destructive);
+  }
+
+  /* Page heading block on the portal/admin routes still rendering their old
+     markup. The display face and the token colours are what make it read as
+     the same page as the converted ones above it. */
+  .tw .portalHead h1 {
+    font-family: var(--font-display);
+    font-size: 1.875rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-foreground);
+  }
+  .tw .portalHead p {
+    color: var(--color-muted-foreground);
+    font-size: 0.875rem;
+  }
+  /* 30px is a desktop page title. On a phone it is the loudest thing on a
+     screen whose job is a list of small facts, and it pushed the first card
+     down with it — 1.5rem keeps the same display face and hierarchy at a size
+     the viewport can afford. Applies to every portal/admin page wearing
+     `.portalHead`, deliberately: they must not disagree about their own title
+     size on the same device. */
+  @media (max-width: 640px) {
+    .tw .portalHead h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .tw .quotaBar {
+    background: var(--color-surface-2);
+    border-color: var(--color-border);
+  }
+
+  /* `.admin-shell` / `.admin-body` are gone — the admin layout is Tickwise now
+     and those rules were deleted from panel.css with it. `.authWrap` is the
+     last survivor of the trio. */
+  .tw .authWrap {
+    background: transparent;
+  }
+
+  /* Origin chips on /admin (clients) and /portal/keys. Rendered by the SHARED
+     `OriginsInput`, so this has to be one bridged rule rather than a local
+     conversion — styling only the admin copy would put two pill treatments on
+     one screen. */
+  .tw .admin-pill {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-foreground);
+    font-family: var(--font-mono);
+  }
+
+  /*
+   * ── The /explore dashboard ─────────────────────────────────────────────
+   *
+   * `tw-base` flattens every table to a bare grid, which is right for a
+   * rewritten one and wrong here: the positions table's whole visual identity
+   * is separated ROW CARDS (8px row spacing, a filled row with a hairline
+   * outline), and flattening it produced an unreadable wall of text. These put
+   * that structure back with token colours, so the dashboard reads as part of
+   * the same site without its 2,000 lines of markup being rewritten first.
+   */
+  .tw :is(.positionsTable, .poolsTable, .logsTable) {
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+  }
+  .tw :is(.positionsTable, .poolsTable, .logsTable) :is(th, td) {
+    padding: 0 1rem;
+    height: 2.6875rem;
+    white-space: nowrap;
+    text-align: left;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-foreground);
+  }
+  /*
+   * Below 1024px the positions table stops being a table: globals.css turns
+   * each row into a card and each cell into a labelled block. Those cell rules
+   * live in layer(legacy) and so lost every one of them to the unlayered rule
+   * above — the cards were being drawn with a desktop row's 43px cell height,
+   * 1rem side padding and `nowrap` inside a 150px column, which is where the
+   * empty space in each card came from. This hands the geometry back for the
+   * card layout only; the colours, weights and sizes above still apply.
+   */
+  @media (max-width: 1024px) {
+    .tw .positionsTable :is(th, td) {
+      height: auto;
+      padding: 0;
+      white-space: normal;
+    }
+  }
+  /* The pool detail panel's in-pool position list is carded at EVERY width
+     (a narrow column beside the charts), so it needs the same hand-back with
+     no breakpoint. */
+  .tw .poolPositions .positionsTable :is(th, td) {
+    height: auto;
+    padding: 0;
+    white-space: normal;
+  }
+  .tw :is(.positionsTable, .poolsTable, .logsTable) th {
+    height: 2rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-muted-foreground);
+  }
+  .tw :is(.positionsTable, .poolsTable, .logsTable) tbody tr {
+    background: var(--color-surface);
+    outline: 1px solid var(--color-border);
+  }
+  .tw :is(.positionsTable, .poolsTable, .logsTable) tbody tr:hover {
+    background: var(--color-surface-2);
+  }
+  /* The row's outline is drawn per-cell, so the rounding lives on the ends. */
+  .tw :is(.positionsTable, .poolsTable, .logsTable) td:first-child {
+    border-top-left-radius: var(--radius-md);
+    border-bottom-left-radius: var(--radius-md);
+  }
+  .tw :is(.positionsTable, .poolsTable, .logsTable) td:last-child {
+    border-top-right-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+  }
+
+  /* Panels, controls and chips around the table. */
+  .tw :is(.positionsTablePanel, .positionDetail, .chartColumn, .positionLogs, .notice) {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+  .tw
+    :is(
+      .dropdownButton,
+      .compactSelect,
+      .iconButton,
+      .expandButton,
+      .miniToggle,
+      .chainPill,
+      .searchInput
+    ) {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-foreground);
+    border-radius: var(--radius-md);
+  }
+  .tw :is(.dropdownButton, .iconButton, .expandButton, .miniToggle):hover {
+    background: var(--color-surface-2);
+  }
+  /* Deliberately not in the group above: the filter caption keeps the cluster's
+     metrics but takes no surface, border or hover, because it isn't a control. */
+  .tw .filtersLabel {
+    color: var(--color-muted-foreground);
+  }
+  /*
+   * Control type scale.
+   *
+   * None of these legacy controls declared a font-size, so they inherited the
+   * root 16.5px at weight 800–900 — heavier and a size larger than the table
+   * they sit above (0.8125rem) and than the site nav beside them (0.875rem).
+   * The header cluster read as the loudest thing on the page after the H1, and
+   * the picker menus were the visible symptom: "Ethereum Mainnet" and
+   * "Avalanche C-Chain" wrapped to two lines inside a 242px panel that has room
+   * for them on one.
+   *
+   * 0.875rem/600 is the size the rest of the design system gives a control
+   * label. The whole interactive layer moves together — cluster, menus and the
+   * toolbar directly beneath — because shrinking only the header would have
+   * left the row under it looking a size too big.
+   */
+  .tw
+    :is(
+      .dropdownButton,
+      .filtersLabel,
+      .viewTabs button,
+      .protocolMenu button,
+      .chainMenu button,
+      .sortStrip button,
+      .compactSelect,
+      .compactSelect select,
+      .searchControl input
+    ) {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  /* Search and the selects are values the user typed or picked, not labels. */
+  .tw :is(.compactSelect select, .searchControl input) {
+    font-weight: 500;
+  }
+  /*
+   * One step down again on a phone. 0.875rem is a desktop control label; at
+   * 375px the same row of pills wrapped three deep and the table started below
+   * the fold. The heights that go with this live in globals.css's 640px block.
+   *
+   * `.searchControl input` is deliberately NOT in the list: iOS Safari zooms
+   * the viewport when a focused input's text is under 16px, and being thrown
+   * into a zoomed page on every tap of the search box is worse than the row it
+   * would save.
+   */
+  @media (max-width: 640px) {
+    .tw
+      :is(
+        .dropdownButton,
+        .viewTabs button,
+        .sortStrip button,
+        .compactSelect,
+        .compactSelect select
+      ) {
+      font-size: 0.75rem;
+    }
+  }
+  /* Freed by the smaller type: both long chain names now fit on one line. */
+  .tw :is(.protocolMenu, .chainMenu) button {
+    height: 2.375rem;
+  }
+  /*
+   * Floating panels on /explore — the chain and protocol pickers, the filters
+   * popover, the position detail overlay.
+   *
+   * They were opaque legacy panels sitting flat on the page. A blurred,
+   * slightly translucent surface is what separates "over" from "in" in this
+   * design, and it is the same treatment the mobile nav and the portal drawer
+   * use, so every overlay in the app now reads the same way.
+   */
+  .tw :is(.protocolMenu, .chainMenu, .filtersMenu, .dropdownMenu) {
+    background: color-mix(in oklab, var(--color-popover) 85%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+  /*
+   * Row hover inside those panels, as a translucent lift off whatever the panel
+   * is rather than a fixed token. It used to be `--color-surface-2`: on the dark
+   * theme that is oklch L=0.22 sitting on a popover that composites to L≈0.19,
+   * a 0.03 difference nobody can see, so the menus had no visible hover at all.
+   * A foreground wash works from either end of the palette — it lifts on dark,
+   * darkens on light — and being translucent it keeps the backdrop blur, which a
+   * solid fill painted over.
+   *
+   * `:not(.active)` keeps the selected row's primary gradient: the hover
+   * selector is one pseudo-class more specific than the `.active` rule below, so
+   * without this, pointing at the current selection wiped its fill. `:not(
+   * :disabled)` is for the "Not indexed yet" protocols — disabled elements still
+   * match :hover, and one that lights up reads as clickable.
+   */
+  .tw
+    :is(.protocolMenu, .chainMenu, .filtersMenu, .dropdownMenu)
+    button:not(:disabled):not(.active):is(:hover, :focus-visible) {
+    background: color-mix(in oklab, var(--color-foreground) 12%, transparent);
+  }
+
+  /* The selected sort chip / active toggle — the design's primary fill. */
+  .tw
+    :is(
+      .miniToggle.active,
+      .expandButton.active,
+      .chartTabs .active,
+      .logTabs .active,
+      .sortChip.active,
+      .viewTabs .active,
+      .sortStrip .active,
+      .protocolMenu .active,
+      .chainMenu .active
+    ) {
+    background: var(--gradient-primary);
+    border-color: transparent;
+    color: var(--color-primary-foreground);
+  }
+  .tw .viewTabs {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+  }
+  .tw .viewTabs button {
+    color: var(--color-muted-foreground);
+  }
+  .tw .viewTabs button.active {
+    color: var(--color-primary-foreground);
+  }
+  .tw .sortStrip button {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-muted-foreground);
+    border-radius: var(--radius-md);
+  }
+  .tw .sortStrip button:hover {
+    background: var(--color-surface-2);
+    color: var(--color-foreground);
+  }
+  .tw .sortStrip button.active {
+    color: var(--color-primary-foreground);
+  }
+  /* Native controls paint themselves from `accent-color`; the legacy sheets
+     point it at the Tickwise teal, which is the one bit of the old palette
+     that survives a re-skin of everything around it. */
+  .tw :is(input[type='checkbox'], input[type='radio'], progress) {
+    accent-color: var(--color-primary);
+  }
+  .tw .pageHeader h1 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    color: var(--color-foreground);
+  }
+  .tw :is(.emptyState, .logsEmpty, .emptyChart) {
+    color: var(--color-muted-foreground);
+  }
+  .tw .positive {
+    color: var(--color-success);
+  }
+  .tw :is(.negative, .error) {
+    color: var(--color-destructive);
+  }
+  .tw .muted {
+    color: var(--color-muted-foreground);
+  }
+  .tw .accent {
+    color: var(--color-primary);
+  }
+  .tw .detailOverlay {
+    background: color-mix(in oklab, var(--color-background) 70%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  /*
+   * ── Docs prose ─────────────────────────────────────────────────────────
+   *
+   * `.docsBody` and `.docsCode` are painted in site.css from `--text` /
+   * `--tk-muted` / `--mono`, so the four docs pages that still use them read as
+   * legacy grey in legacy type — directly beside `/docs/coverage`, which is
+   * fully converted. Same page, two typefaces.
+   */
+  /* `:is(p, li, td)` explicitly, not inheritance from the container: site.css
+     sets `color` on `.docsBody p, .docsBody li` DIRECTLY, and a direct
+     declaration always beats an inherited value however the layers are
+     ordered — a higher layer only wins between rules matching the same
+     element. */
+  .tw .docsBody,
+  .tw .docsBody :is(p, li, td, dd) {
+    color: var(--color-muted-foreground);
+  }
+  .tw .docsBody :is(h1, h2, h3) {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    color: var(--color-foreground);
+  }
+  .tw .docsBody :is(strong, b) {
+    color: var(--color-foreground);
+  }
+  .tw .docsBody code {
+    font-family: var(--font-mono);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-foreground);
+  }
+  .tw :is(.docsCode, pre.docsCode) {
+    font-family: var(--font-mono);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-foreground);
+  }
+  .tw .docsBody a {
+    color: var(--color-primary);
+  }
+
+  /*
+   * ── Chart chrome ───────────────────────────────────────────────────────
+   *
+   * The series colours are handed to lightweight-charts from JS (see
+   * charts/theme.ts); this is the surrounding DOM — axis labels, the crosshair
+   * tooltip, the liquidity-chart badge — which is ordinary CSS and was still
+   * legacy.
+   */
+  .tw :is(.tvChart, .tvCanvas) {
+    background: transparent;
+  }
+  .tw .tvAxis {
+    color: var(--color-muted-foreground);
+  }
+  .tw :is(.tvTooltip, .tvTooltipBody, .liqCurBadge) {
+    background: var(--color-popover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-popover-foreground);
+    font-family: var(--font-mono);
+  }
+
+  .tw .mono {
+    font-family: var(--font-mono);
+  }
+
+  /*
+   * Links inside bridged components. The Tickwise sheets paint anchors with
+   * `--tk-accent` (teal); inside a converted page they have to be the design's
+   * primary or every panel grows one teal word. Scoped to bridged containers
+   * rather than all of `.tw`, so a rewritten component's own link classes are
+   * left entirely alone.
+   */
+  .tw :is(.admin-card, .admin-note, .emailPrompt, .payInstr, .quotaFoot) a {
+    color: var(--color-primary);
+  }
+}
+
+/*
+ * ── Frame utilities ──────────────────────────────────────────────────────
+ *
+ * The one horizontal frame every page and section wrapper uses. Before this
+ * existed each wrapper picked its own `mx-auto max-w-* px-*` trio, and the
+ * inconsistency was visible — three different left edges on one page. Section
+ * wrappers get this class and keep only their own vertical padding.
+ */
+@utility container-page {
+  width: 100%;
+  max-width: var(--container-page);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/*
+ * Horizontal padding only, for pages whose content is a centred card rather
+ * than a page frame — auth, error, not-found.
+ */
+@utility px-gutter {
+  padding-inline: var(--gutter);
+}
+
+/*
+ * Capped single-column content, nested inside a `container-page`. Left-aligned
+ * rather than centred, deliberately: it keeps the block's edge on the same line
+ * as the page heading above it and as every other page in the site.
+ */
+@utility container-narrow {
+  width: 100%;
+  max-width: var(--container-narrow);
+}
+
+/*
+ * Docs prose defaults, replacing what `.docsBody` used to supply from
+ * layer(legacy) — which also pinned h1 to 23px and body to 13.5px, i.e. the
+ * whole reason the docs pages read at the wrong scale. Only the two things a
+ * page cannot express as a utility live here: inline `<code>` chips and link
+ * colour. Everything else is a token class on the element.
+ *
+ * Scoped to `.docsProse`, NOT `.container-prose` — the latter is shared with
+ * /status and /legal, which are already converted and must not change.
+ */
+.tw .docsProse :not(pre) > code {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+  padding: 0.0625rem 0.3125rem;
+  font-size: 0.9em;
+  /* These chips hold parameter names and query strings, and a query string is
+     one unbreakable word to the line-breaker: `minValueUsd=0&minPoolTvl=0&
+     includeRisky=true&status=all` measured 487px inside a 288px column on a
+     320px phone and ran straight off the page. `html` is `overflow-x: clip`,
+     so nothing scrolled to reach it — the tail was simply gone. `anywhere`
+     rather than `break-word` because these have no spaces to break at. */
+  overflow-wrap: anywhere;
+}
+.tw .docsProse a:not([class]) {
+  color: var(--color-primary);
+  text-underline-offset: 4px;
+}
+.tw .docsProse a:not([class]):hover {
+  text-decoration: underline;
+}
+
+@utility container-prose {
+  width: 100%;
+  max-width: var(--container-prose);
+}
+
+@utility bg-hero {
+  background: var(--gradient-hero);
+}
+@utility bg-gradient-primary {
+  background: var(--gradient-primary);
+}
+@utility shadow-glow {
+  box-shadow: var(--shadow-glow);
+}
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+@utility text-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--foreground),
+    color-mix(in oklab, var(--primary) 70%, var(--foreground))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility grid-lines {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--foreground) 6%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--foreground) 6%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 48px 48px;
+}
+
+/* ── Living background + motion system ───────────────────────────── */
+
+@utility mask-fade {
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 80%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 80%);
+}
+@utility bg-fog {
+  background: linear-gradient(
+    to top,
+    var(--background) 10%,
+    color-mix(in oklab, var(--background) 55%, transparent) 55%,
+    transparent 100%
+  );
+}
+@utility ambient-orb {
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--primary) 32%, transparent),
+    transparent 72%
+  );
+  filter: blur(40px);
+}
+@utility ambient-orb-2 {
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--chart-5) 22%, transparent),
+    transparent 72%
+  );
+  filter: blur(60px);
+}
+@utility ambient-orb-3 {
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--primary-glow) 22%, transparent),
+    transparent 72%
+  );
+  filter: blur(60px);
+}
+
+@keyframes drift-a {
+  0%,
+  100% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(-48%, 3vh) scale(1.08);
+    opacity: 1;
+  }
+}
+@keyframes drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(6vw, -4vh) scale(1.12);
+    opacity: 0.95;
+  }
+}
+@keyframes drift-c {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.05);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-5vw, 3vh) scale(1);
+    opacity: 0.9;
+  }
+}
+/*
+ * TRANSLATED, NOT REPOSITIONED, and the two are pixel-for-pixel the same thing
+ * here.
+ *
+ * This used to animate `background-position` from `0 0` to `48px 48px`.
+ * `background-position` is not a compositable property, so every frame of a
+ * 40s loop repainted a FULL-VIEWPORT layer — one that also carries a
+ * `mask-image` — on the main thread, forever. On a phone that is the most
+ * expensive thing the ambient background does.
+ *
+ * `grid-lines` tiles at exactly 48px, so shifting the layer by one whole tile
+ * is congruent with shifting it by none: the element is oversized by 48px on
+ * every side (`-inset-[48px]`) and clipped by an `overflow-hidden` wrapper that
+ * carries the mask and the opacity, so the travel never exposes an edge and the
+ * rendered result is identical to what `background-position` produced. See
+ * AmbientBackground.
+ */
+@keyframes grid-pan {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(48px, 48px, 0);
+  }
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.08;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+@keyframes caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes ping-slow {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.animate-drift-a {
+  animation: drift-a 34s ease-in-out infinite;
+}
+.animate-drift-b {
+  animation: drift-b 46s ease-in-out infinite;
+}
+.animate-drift-c {
+  animation: drift-c 52s ease-in-out infinite;
+}
+.animate-grid-pan {
+  animation: grid-pan 40s linear infinite;
+}
+.animate-twinkle {
+  animation: twinkle 9s ease-in-out infinite;
+}
+.animate-caret {
+  animation: caret 1.05s step-end infinite;
+}
+.animate-ping-slow {
+  animation: ping-slow 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift-a,
+  .animate-drift-b,
+  .animate-drift-c,
+  .animate-grid-pan,
+  .animate-twinkle,
+  .animate-caret,
+  .animate-ping-slow {
+    animation: none !important;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Hero: OS-grade environment ──────────────────────────────────── */
+
+@utility mask-fade-floor {
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+  mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+}
+@utility bg-vignette {
+  background: radial-gradient(
+    ellipse 90% 70% at 50% 40%,
+    transparent 40%,
+    color-mix(in oklab, var(--background) 85%, transparent) 100%
+  );
+}
+
+/* The route-progress sweep. Indeterminate on purpose — see RouteProgress. */
+@keyframes route-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+.animate-route-sweep {
+  animation: route-sweep 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Still visible, just not travelling — the bar is the only feedback a
+     navigation gives, so it must not disappear entirely here. */
+  .animate-route-sweep {
+    animation: none !important;
+    width: 100%;
+    opacity: 0.6;
+  }
+}
+
+/*
+ * Same substitution as `grid-pan` above, and it matters more here: this one
+ * runs on an 8s loop (not 40s) over a layer that is masked AND inside a
+ * `perspective` + `rotateX(72deg) scale(2.4)`, so each repaint was rasterising
+ * a 3D-transformed surface. 96px is two whole 48px tiles, so the travel is
+ * congruent; the layer is oversized 96px top and bottom and clipped by the
+ * transformed wrapper.
+ */
+@keyframes grid-run {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 96px, 0);
+  }
+}
+@keyframes streak {
+  0% {
+    transform: translate3d(-30vw, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(130vw, 0, 0);
+    opacity: 0;
+  }
+}
+
+.animate-grid-run {
+  animation: grid-run 8s linear infinite;
+}
+.animate-streak {
+  animation: streak 18s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-grid-run,
+  .animate-streak {
+    animation: none !important;
+  }
+}

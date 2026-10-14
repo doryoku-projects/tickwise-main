@@ -1,0 +1,522 @@
+{
+  "info": {
+    "_postman_id": "c1a33e65-fe87-4044-bdc1-94a7409ba49c",
+    "name": "Doryoku Positions API (v1)",
+    "description": "Metered public API for Uniswap v4 DeFi data — positions (PnL / APR / ROI), pools (TVL / volume / fees + positions/holders counts), and time-series charts.\n\n## Auth\nEvery request under **Positions** and **Pools** requires the `KC-APIKey` header. The collection sends it automatically from the `{{apiKey}}` variable.\n`/v1/chains` and `/v1/protocols` (the **Metadata** folder) are free and unauthenticated.\n\n## Key types\nKeys are issued as either **server** or **browser** type:\n- **server** — backend-only. Rejected (403) if a request carries an `Origin` header (i.e. is made from a browser). Use these for server-to-server calls.\n- **browser** — bound to one or more website origins (e.g. `https://app.example.com`). A browser call from any other origin is rejected (403), so a leaked key is useless on other sites.\n\nCalls from Postman / curl / a backend send no `Origin` header, so **either key type works here** — the browser binding only restricts real in-browser usage.\n\n## Setup\n1. Set the `baseUrl` collection variable to the API host (defaults to `http://localhost:3000`).\n2. The `apiKey` variable is pre-filled with your key.\n\n## Metering & limits\nEach metered call costs 1 unit (live-tunable per route). Requests are rate-limited per minute and quota-metered per month per the plan attached to the key. On 429 see the `Retry-After`, `X-RateLimit-*`, and `X-Quota-*` response headers.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": ""
+  },
+  "item": [
+    {
+      "name": "Positions",
+      "item": [
+        {
+          "name": "List positions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/positions?chainId=1&protocol=uniswap-v4&sort=apr&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "positions"
+              ],
+              "query": [
+                {
+                  "key": "chainId",
+                  "value": "1",
+                  "description": "Chain id. Default 1 (Ethereum)."
+                },
+                {
+                  "key": "protocol",
+                  "value": "uniswap-v4",
+                  "description": "uniswap-v3 | uniswap-v4. Default uniswap-v4."
+                },
+                {
+                  "key": "sort",
+                  "value": "apr",
+                  "description": "apr | fee_apr | roi | age | pnl | underlying_value | nft_id_asc | nft_id_desc. Default apr."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "1-based page. Default 1."
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Page size, 1-100. Default 20."
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": "active | inactive | all.",
+                  "disabled": true
+                },
+                {
+                  "key": "range",
+                  "value": "all",
+                  "description": "all | in | out (in/out of range). Default all.",
+                  "disabled": true
+                },
+                {
+                  "key": "minValueUsd",
+                  "value": "0",
+                  "description": "Min underlying value in USD. Default 0.",
+                  "disabled": true
+                },
+                {
+                  "key": "minPoolTvl",
+                  "value": "1000",
+                  "description": "Min pool TVL in USD. Default 1000.",
+                  "disabled": true
+                },
+                {
+                  "key": "includeRisky",
+                  "value": "false",
+                  "description": "Include risky/low-trust positions. Default false.",
+                  "disabled": true
+                },
+                {
+                  "key": "positionId",
+                  "value": "",
+                  "description": "Exact tokenId / positionId lookup.",
+                  "disabled": true
+                },
+                {
+                  "key": "poolId",
+                  "value": "",
+                  "description": "Filter to a pool address (lowercased).",
+                  "disabled": true
+                },
+                {
+                  "key": "owner",
+                  "value": "",
+                  "description": "Filter to a single owner wallet (0x EVM address, case-insensitive). Returns every position held by that address. Composes with the other filters — for the wallet's COMPLETE set add status=all, minValueUsd=0, minPoolTvl=0, includeRisky=true.",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Ranked, filtered, paginated list of positions. Costs 1 unit per call."
+          },
+          "response": []
+        },
+        {
+          "name": "List positions by owner",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/positions?owner=0x0000000000000000000000000000000000000000&protocol=uniswap-v4&status=all&minValueUsd=0&minPoolTvl=0&includeRisky=true&sort=underlying_value&page=1&limit=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "positions"
+              ],
+              "query": [
+                {
+                  "key": "owner",
+                  "value": "0x0000000000000000000000000000000000000000",
+                  "description": "Owner wallet (0x EVM address, case-insensitive). Replace with the address to look up."
+                },
+                {
+                  "key": "protocol",
+                  "value": "uniswap-v4",
+                  "description": "uniswap-v3 | uniswap-v4. Default uniswap-v4."
+                },
+                {
+                  "key": "status",
+                  "value": "all",
+                  "description": "all → include open AND closed positions."
+                },
+                {
+                  "key": "minValueUsd",
+                  "value": "0",
+                  "description": "0 → include dust/small positions."
+                },
+                {
+                  "key": "minPoolTvl",
+                  "value": "0",
+                  "description": "0 → don't drop positions in low-TVL pools."
+                },
+                {
+                  "key": "includeRisky",
+                  "value": "true",
+                  "description": "true → include risky/low-trust positions."
+                },
+                {
+                  "key": "sort",
+                  "value": "underlying_value",
+                  "description": "apr | fee_apr | roi | age | pnl | underlying_value | nft_id_asc | nft_id_desc."
+                },
+                {
+                  "key": "chainId",
+                  "value": "1",
+                  "description": "Restrict to one chain. OMIT for all enabled chains (scatter-gather merge).",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "1-based page. Default 1."
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Page size, 1-100. Default 20."
+                }
+              ]
+            },
+            "description": "Every position held by a wallet. Omit `chainId` to search all enabled chains at once. This is the same `/v1/positions` list route with the `owner` filter plus the widest visibility params so nothing the wallet holds is filtered out. Paginate via `page` for wallets with >100 positions. Costs 1 unit per call."
+          },
+          "response": []
+        },
+        {
+          "name": "Get position by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/positions/1/uniswap-v4/:positionId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "positions",
+                "1",
+                "uniswap-v4",
+                ":positionId"
+              ],
+              "variable": [
+                {
+                  "key": "positionId",
+                  "value": "",
+                  "description": "The position tokenId (ERC721 id for v4)."
+                }
+              ]
+            },
+            "description": "Single position detail (includes transactions). Costs 1 unit per call."
+          },
+          "response": []
+        },
+        {
+          "name": "Get position charts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/positions/1/uniswap-v4/:positionId/charts?range=30d",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "positions",
+                "1",
+                "uniswap-v4",
+                ":positionId",
+                "charts"
+              ],
+              "query": [
+                {
+                  "key": "range",
+                  "value": "30d",
+                  "description": "30d | 60d | 90d | 180d | all. Default 30d."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "positionId",
+                  "value": "",
+                  "description": "The position tokenId (ERC721 id for v4)."
+                }
+              ]
+            },
+            "description": "Time-series chart data for a position (value, fees, liquidity). Costs 1 unit per call."
+          },
+          "response": []
+        }
+      ],
+      "description": "Metered. Requires KC-APIKey."
+    },
+    {
+      "name": "Pools",
+      "item": [
+        {
+          "name": "List pools",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/pools?chainId=1&protocol=uniswap-v4&sort=tvl&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "pools"
+              ],
+              "query": [
+                {
+                  "key": "chainId",
+                  "value": "1",
+                  "description": "Chain id. Default 1 (Ethereum)."
+                },
+                {
+                  "key": "protocol",
+                  "value": "uniswap-v4",
+                  "description": "uniswap-v3 | uniswap-v4. Default uniswap-v4."
+                },
+                {
+                  "key": "sort",
+                  "value": "tvl",
+                  "description": "tvl | volume | fees | fee_apr | age. Default tvl."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "1-based page. Default 1."
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Page size, 1-100. Default 20."
+                },
+                {
+                  "key": "minTvlUsd",
+                  "value": "0",
+                  "description": "Min pool TVL in USD. Default 0.",
+                  "disabled": true
+                },
+                {
+                  "key": "includeRisky",
+                  "value": "false",
+                  "description": "Include risky/low-trust pools. Default false.",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Match pool address or token symbol (max 64 chars).",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Ranked, filtered, paginated list of pools. Each pool includes `positionsCount` (open LP positions) and `holdersCount` (distinct owner wallets). Costs 1 unit per call."
+          },
+          "response": []
+        },
+        {
+          "name": "Get pool by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/pools/1/uniswap-v4/:poolId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "pools",
+                "1",
+                "uniswap-v4",
+                ":poolId"
+              ],
+              "variable": [
+                {
+                  "key": "poolId",
+                  "value": "",
+                  "description": "Pool id — v4: 0x + 64 hex; v3: 0x + 40 hex address."
+                }
+              ]
+            },
+            "description": "Single pool detail, including `positionsCount` (open LP positions) and `holdersCount` (distinct owner wallets). Costs 1 unit per call."
+          },
+          "response": []
+        },
+        {
+          "name": "Get pool charts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/pools/1/uniswap-v4/:poolId/charts?range=30d",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "pools",
+                "1",
+                "uniswap-v4",
+                ":poolId",
+                "charts"
+              ],
+              "query": [
+                {
+                  "key": "range",
+                  "value": "30d",
+                  "description": "30d | 60d | 90d | 180d | all. Default 30d."
+                }
+              ],
+              "variable": [
+                {
+                  "key": "poolId",
+                  "value": "",
+                  "description": "Pool id — v4: 0x + 64 hex; v3: 0x + 40 hex address."
+                }
+              ]
+            },
+            "description": "Time-series chart data for a pool (TVL, volume, fees). Costs 1 unit per call."
+          },
+          "response": []
+        }
+      ],
+      "description": "Metered. Requires KC-APIKey."
+    },
+    {
+      "name": "Metadata (free)",
+      "item": [
+        {
+          "name": "List chains",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/chains",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "chains"
+              ]
+            },
+            "description": "Supported chains + enabled protocols per chain. Free, no API key."
+          },
+          "response": []
+        },
+        {
+          "name": "List protocols",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/protocols",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "protocols"
+              ]
+            },
+            "description": "Supported protocols + chains they run on. Free, no API key."
+          },
+          "response": []
+        }
+      ],
+      "description": "Free, unauthenticated, unmetered."
+    },
+    {
+      "name": "Health (free)",
+      "item": [
+        {
+          "name": "Health + indexing status",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Service health plus a per-integration indexing-status badge (one entry per enabled (chainId, protocol)). Free, no API key, unmetered.\n\nPer-integration fields:\n- `indexedBlock` — latest block the indexer has PROCESSED (synced head). If the indexer cannot be reached for a moment, the last successful reading is repeated for up to 5 minutes (`lagBlocks` is always recomputed against the live chain head, so a repeated block can only overstate the lag). `null` if the indexer reports nothing for the chain, or has been unreachable for longer than that.\n- `chainHeadBlock` — current chain tip, sourced from DeFiLlama (no RPC, no key). `null` when the chain has no DeFiLlama slug.\n- `lagBlocks` — `max(0, chainHeadBlock - indexedBlock)`; `null` when either side is unknown.\n- `lagSeconds` — `lagBlocks` × the chain's average block time, in seconds. An estimate; `null` whenever `lagBlocks` is.\n- `synced` — `true` when an indexed block exists AND lag is within the healthy threshold (or the chain head is unknown).\n- `status` — `healthy` | `degraded` | `unhealthy` | `not_deployed`.\n- `indexedUpToTimestamp` — time of the newest indexed event (epoch seconds); legacy field, kept for back-compat. Carried the same way as `indexedBlock`.\n\nResponse is cached + fail-soft server-side, so polling /health never blocks on or hammers the indexer."
+          },
+          "response": [
+            {
+              "name": "200 OK — healthy",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/health",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"ok\",\n  \"service\": \"positions-backend\",\n  \"integrations\": [\n    {\n      \"chainId\": 1,\n      \"protocol\": \"uniswap-v4\",\n      \"enabled\": true,\n      \"indexedBlock\": 25372096,\n      \"indexedUpToTimestamp\": 1782278600,\n      \"chainHeadBlock\": 25372230,\n      \"lagBlocks\": 134,\n      \"lagSeconds\": 1608,\n      \"synced\": true,\n      \"status\": \"healthy\"\n    }\n  ],\n  \"timestamp\": \"2026-06-24T05:21:00.000Z\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Free, unauthenticated, unmetered. Feeds the client indexed-vs-chain-head block badge."
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "KC-APIKey",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "description": "API host. Replace with the production URL before sharing."
+    },
+    {
+      "key": "apiKey",
+      "value": "",
+      "description": "Your KC-APIKey credential."
+    }
+  ]
+}

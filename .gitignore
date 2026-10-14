@@ -1,0 +1,29 @@
+# Sibling projects and scratch trees kept in this working copy but not part of
+# this repository.
+#
+# EVERY PATTERN HERE IS ANCHORED WITH A LEADING SLASH, and that is load-bearing
+# rather than tidiness. An unanchored pattern matches a directory of that name
+# at ANY depth, and `docs` in particular was matching `frontend/src/app/docs/`
+# — the app's own documentation ROUTES. Two consequences, both silent:
+#
+#   1. Those pages were never tracked by git. `git status` did not list them,
+#      `git ls-files` returned nothing for them, and a fresh clone would have
+#      been missing the whole /docs section of the site.
+#   2. Tailwind's source scanner respects .gitignore, so it skipped the
+#      directory and never generated the utilities used only in there — the
+#      docs sidebar's `hidden md:block` and `md:grid-cols-[13.75rem_1fr]` were
+#      absent from the stylesheet, so the sidebar was invisible at every width.
+#
+# `command grep`/ugrep in this shell also honours these patterns, which is why
+# a recursive search for a string in those files reported zero hits.
+#
+# Keep the leading slash on anything added here.
+/copypools
+/subgraphs
+/pitch
+/docs
+/tickwise
+
+node_modules
+
+.DS_Store

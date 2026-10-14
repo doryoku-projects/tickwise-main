@@ -1,0 +1,5 @@
+allowBuilds:
+  '@reown/appkit': false
+  es5-ext: false
+  esbuild: false
+  sharp: false

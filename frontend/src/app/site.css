@@ -1,0 +1,1784 @@
+/* ============================================================
+   Marketing shell (landing, pricing) + developer-portal shell.
+   Loaded globally from app/layout.tsx, after globals.css.
+
+   Rules of the house: camelCase like globals.css, every colour a
+   var(--token) from globals.css, and CLASS SELECTORS ONLY so nothing
+   here races the bare `table` / `th, td` rules in globals.css.
+   Panel chrome (.admin-card, .admin-btn, .admin-table, …) lives in
+   app/admin/panel.css and is reused as-is — nothing is duplicated here.
+   ============================================================ */
+
+/* ---------- marketing: header + footer ---------- */
+
+/* `.appNav a { color: inherit }` in globals.css outranks a bare `.navCta`, so
+   the selector is qualified — otherwise the CTA renders muted-on-accent. */
+.appNav a.navCta {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 7px;
+  padding: 0 12px;
+  background: var(--tk-accent);
+  color: var(--tk-accent-ink);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.appNav a.navCta:hover {
+  filter: brightness(1.07);
+  color: var(--tk-accent-ink);
+}
+
+.siteMain {
+  width: min(1080px, calc(100vw - 40px));
+  margin: 0 auto;
+  padding: 52px 0 40px;
+}
+
+.siteSection {
+  margin: 0 0 56px;
+  /* the 44px sticky .appNav would otherwise cover an #anchor target */
+  scroll-margin-top: 60px;
+}
+
+.siteSection > h2 {
+  margin: 0 0 6px;
+  font-size: 19px;
+  color: var(--text);
+}
+
+.siteSection > p {
+  margin: 0 0 20px;
+  max-width: 62ch;
+  color: var(--tk-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.siteFooter {
+  border-top: 1px solid var(--line);
+  background: color-mix(in oklab, var(--panel) 60%, transparent);
+}
+
+.footerInner {
+  width: min(1080px, calc(100vw - 40px));
+  margin: 0 auto;
+  padding: 34px 0 44px;
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, 1fr);
+  gap: 26px;
+}
+
+.footerCol h3 {
+  margin: 0 0 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+}
+
+.footerCol a {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--tk-muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.footerCol a:hover {
+  color: var(--text);
+}
+
+.footerCol p {
+  margin: 0 0 10px;
+  color: var(--tk-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 34ch;
+}
+
+.footerMark {
+  color: var(--tk-accent);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+/* ---------- marketing: buttons + hero ---------- */
+
+.siteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: var(--tk-accent);
+  color: var(--tk-accent-ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: filter 0.15s, background 0.15s;
+}
+
+.siteBtn:hover {
+  filter: brightness(1.07);
+}
+
+.siteBtn.ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.siteBtn.ghost:hover {
+  background: var(--hover);
+  filter: none;
+}
+
+.hero {
+  padding: 30px 0 46px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 38px;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  max-width: 18ch;
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--tk-accent);
+}
+
+.heroLead {
+  margin: 18px 0 0;
+  max-width: 60ch;
+  color: var(--soft);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.heroMeta {
+  margin: 16px 0 0;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+/* live proof strip — real numbers from /health, never invented ones */
+.proofGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-top: 34px;
+}
+
+.proofTile {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 14px 16px;
+}
+
+.proofTile span {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--faint);
+  margin-bottom: 7px;
+}
+
+.proofTile strong {
+  font-size: 19px;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.proofTile small {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--tk-muted);
+}
+
+/* ---------- marketing: feature + step grids ---------- */
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.featureCard {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 18px;
+}
+
+.featureCard h3 {
+  margin: 12px 0 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.featureCard p {
+  margin: 0;
+  color: var(--tk-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.featureCard .featureIcon {
+  color: var(--tk-accent);
+}
+
+.stepList {
+  counter-reset: step;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepList li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 12px;
+  align-items: baseline;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 13px 16px;
+  color: var(--soft);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.stepList li::before {
+  content: counter(step);
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--tk-accent) 16%, transparent);
+  color: var(--tk-accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* Marketing-side helper text. Mirrors .admin-note, but the public pages
+   deliberately don't load panel.css — different realm, different density. */
+.siteNote {
+  font-size: 12px;
+  color: var(--tk-muted);
+  margin: 6px 0;
+  line-height: 1.6;
+}
+
+/*
+ * The "sign in with X" instruction on /link-account.
+ *
+ * In `site.css` rather than `panel.css` because the auth pages deliberately do
+ * NOT load the admin stylesheet — an `.admin-*` class here would render as
+ * unstyled body text, which is exactly what this element must not be.
+ *
+ * Accent-tinted rather than warn-coloured: this is the instruction that gets
+ * somebody through the flow, not a warning about a mistake. `authCalloutStuck`
+ * switches it to the warn palette for the one case that IS a dead end.
+ */
+.authCallout {
+  margin: 0 0 4px;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in oklab, var(--tk-accent) 45%, transparent);
+  border-radius: 9px;
+  background: color-mix(in oklab, var(--tk-accent) 12%, transparent);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.authCallout strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.authCalloutStuck {
+  border-color: color-mix(in oklab, var(--warn, #b45309) 55%, transparent);
+  background: color-mix(in oklab, var(--warn, #b45309) 12%, transparent);
+}
+
+.codeBlock {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--soft);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.codeBlock b {
+  color: var(--tk-accent);
+  font-weight: 700;
+}
+
+/* ---------- pricing ---------- */
+
+.planGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+.planCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.planCard.featured {
+  border-color: var(--tk-accent);
+}
+
+.planCard h3 {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.planPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.planPrice strong {
+  font-size: 27px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.planPrice span {
+  font-size: 12px;
+  color: var(--tk-muted);
+}
+
+.planFeatures {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--soft);
+}
+
+.planFeatures li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 9px;
+  align-items: start;
+  line-height: 1.55;
+}
+
+.planFeatures li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  margin-top: 7px;
+  border-radius: 999px;
+  background: var(--tk-accent);
+}
+
+.planSpacer {
+  flex: 1;
+}
+
+/* Unit-cost table: opts out of the row-card `table`/`th,td` rules in
+   globals.css (class beats element selector) and wraps on mobile. */
+.priceTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.priceTable th,
+.priceTable td {
+  height: auto;
+  padding: 11px 14px;
+  text-align: left;
+  white-space: normal;
+  border-bottom: 1px solid var(--line-soft);
+  background: transparent;
+  vertical-align: top;
+}
+
+.priceTable th {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.priceTable tbody tr:hover td {
+  background: var(--hover);
+}
+
+.priceTable .num {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+/* (.tableWrap for horizontal scroll already lives in globals.css) */
+
+.faqItem {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 13px 16px;
+  margin-bottom: 9px;
+}
+
+.faqItem summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.faqItem p {
+  margin: 10px 0 0;
+  color: var(--tk-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* ---------- developer portal shell ---------- */
+
+.portalShell {
+  width: min(1240px, calc(100vw - 40px));
+  margin: 0 auto;
+  padding: 26px 0 80px;
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+
+.portalSidebar {
+  position: sticky;
+  top: 66px;
+  display: grid;
+  gap: 4px;
+}
+
+.portalAccount {
+  padding: 12px 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.portalAccount strong {
+  display: block;
+  font-size: 12px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.portalAccount span {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--tk-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.portalNavLink {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  color: var(--tk-muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.portalNavLink:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.portalNavLink.active {
+  color: var(--tk-accent);
+  background: color-mix(in oklab, var(--tk-accent) 12%, transparent);
+}
+
+/*
+ * Log out, pushed to the bottom of the sidebar and fenced off.
+ *
+ * It is a `<button>` styled as a nav link, so it needs the button chrome reset
+ * that the inline style used to carry.
+ *
+ * DECLARED HERE, above the responsive section, and that placement is the whole
+ * bug fix. It used to live near the bottom of this file — AFTER the
+ * `max-width: 900px` block that adapts it — and since both rules are a single
+ * class, the later one won: on every phone the desktop `margin-top` and
+ * `border-top` applied inside a horizontal nav, which fenced the button off in
+ * the wrong axis and pushed it 14px out of line with its siblings (measured:
+ * top 84 against 70). Same load-order trap as `.confirmDanger` vs `panel.css`.
+ * Anything that needs a responsive override must be declared before it.
+ */
+.portalNavLogout {
+  margin-top: 14px;
+  padding-top: 14px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.portalNavLogout:hover:not(:disabled) {
+  /* The hover fill would look wrong bleeding over the rule above it. */
+  background: none;
+  color: var(--text);
+}
+
+.portalNavLogout:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.portalMain {
+  min-width: 0;
+}
+
+.portalHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.portalHead h1 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.portalHead p {
+  margin: 7px 0 0;
+  color: var(--tk-muted);
+  font-size: 13px;
+  max-width: 68ch;
+  line-height: 1.6;
+}
+
+/*
+ * 130px, not 170px, and that number is the entire mobile fix here.
+ *
+ * `auto-fit` drops to ONE column the moment two tracks plus the gap stop
+ * fitting, and a portal card on a 375px phone leaves ~285px of content against
+ * the 352px two 170px tracks ask for. So PLAN and STATUS each took a full-width
+ * row to say one word. Two 130px tracks need 272px, which that card clears, and
+ * they still collapse to one below ~360px where they genuinely cannot.
+ *
+ * Desktop is untouched: `auto-fit` collapses the empty tracks at either
+ * minimum, so a two-tile grid is two half-width tiles before and after.
+ */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.statTile {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-2);
+  padding: 14px 16px;
+}
+
+.statTile span {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--faint);
+  margin-bottom: 7px;
+}
+
+.statTile strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * The narrow step, matching the type and padding the usage page's metric tiles
+ * take at the same width. Two tiles share ~285px here, so trimming the frame
+ * and dropping the value two points is what buys a plan name its single line
+ * (~104px of "Professional" against the ~112px the tile now leaves).
+ *
+ * Declared immediately below the base rules, and not folded into the
+ * `max-width: 420px` block further down the file — a later block would still
+ * win, but `.statTile` reads as one thing, and the whole point of keeping it
+ * together is that the next person changing the padding sees this.
+ */
+@media (max-width: 420px) {
+  /* 12px all round, which is the overview page's `p-3` — the two pages put a
+     stat tile on a phone through different stylesheets and must not land on
+     two different tiles. The 12px gap is inherited from the base rule for the
+     same reason. */
+  .statTile {
+    padding: 12px;
+  }
+
+  .statTile span {
+    margin-bottom: 5px;
+  }
+
+  .statTile strong {
+    font-size: 15px;
+  }
+}
+
+/*
+ * A tile holding an email address takes the whole row while two tracks are
+ * narrow enough to break one.
+ *
+ * `info@example.com` is ~130px of type against the ~106px a half-width tile
+ * leaves on a 375px phone, so it wrapped mid-domain ("info@doryoku." / "tech")
+ * — `overflow-wrap: anywhere` on the value stops it overflowing the card but
+ * cannot stop it looking like two addresses. Shrinking the type far enough to
+ * fit would have made the account's own address the smallest thing on the
+ * page. Below 560px two tracks are ~106px and cannot hold one; above it they
+ * are ~230px and can, so that is where the span ends.
+ *
+ * Opt-in (`.wide`), not `:has()` on the content: only the caller knows a value
+ * is an address rather than a word like "Free" or "active", which are right in
+ * a half tile.
+ */
+@media (max-width: 560px) {
+  .statTile.wide {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- quota meter ---------- */
+
+.quotaTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 9px;
+}
+
+.quotaTop strong {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.quotaBar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--panel-3);
+  border: 1px solid var(--line-soft);
+  overflow: hidden;
+}
+
+.quotaFill {
+  height: 100%;
+  background: var(--tk-accent);
+  transition: width 0.3s ease;
+}
+
+.quotaFill.warn {
+  background: var(--amber);
+}
+
+.quotaFill.over {
+  background: var(--red);
+}
+
+.quotaFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 9px;
+}
+
+.quotaFoot a {
+  color: var(--tk-accent);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.quotaFoot a:hover {
+  text-decoration: underline;
+}
+
+/* Inline month bar in the usage table (monthly aggregates are all we store). */
+.monthBar {
+  height: 8px;
+  min-width: 70px;
+  border-radius: 999px;
+  background: var(--panel-3);
+  overflow: hidden;
+}
+
+.monthBarFill {
+  height: 100%;
+  background: color-mix(in oklab, var(--tk-accent) 70%, transparent);
+}
+
+/* ---------- one-time key reveal ---------- */
+
+.revealBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in oklab, var(--bg) 78%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.revealCard {
+  width: min(560px, 100%);
+  border: 1px solid var(--tk-accent);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.revealCard h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.revealWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 14px 0;
+  padding: 11px 13px;
+  border: 1px solid var(--red-line);
+  border-radius: 9px;
+  background: var(--red-soft);
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.revealActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* ---------- auth pages ---------- */
+
+.authWrap {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.authTop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+}
+
+.authTop a {
+  color: var(--tk-accent);
+  font-size: 17px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.authFoot {
+  text-align: center;
+  margin: 16px auto 40px;
+  font-size: 12px;
+  color: var(--tk-muted);
+}
+
+.authFoot a {
+  color: var(--tk-accent);
+  text-decoration: none;
+}
+
+.authFoot a:hover {
+  text-decoration: underline;
+}
+
+/* SSO provider buttons on /login and /signup. Two columns; the odd one out (or
+   a lone provider) takes the full width instead of sitting next to a gap.
+   Sizing only — the buttons keep .admin-btn's own padding and colours, so
+   nothing here depends on whether panel.css loaded before or after this file. */
+.ssoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ssoGrid > *:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* Labels come from the server and can be long — clip rather than reflow the
+   button, the icon stays put. */
+.ssoLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Monogram for a provider we have no real glyph for. Deliberately neutral: we
+   don't dress a provider up in a look-alike logo. */
+.ssoMark {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--tk-muted);
+}
+
+/* "or use your email" rule between the providers and the password form —
+   neither side is a fallback. */
+.authDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--faint);
+}
+
+.authDivider::before,
+.authDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* Password reset is phase 2 — the entry point ships visibly disabled so the
+   login page needs no rework when it lands. */
+.linkDisabled {
+  color: var(--faint);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 900px) {
+  .portalShell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  /*
+   * A WRAPPED GRID, not a horizontal scroller.
+   *
+   * The scroller measured 641px of nav inside a 335px box on a 375px phone, so
+   * "Settings" and "Log out" started 222px OFF-SCREEN behind a sideways swipe
+   * with no affordance — including, on a page whose only exit is that button,
+   * the exit. Equal-width auto-fit cells keep every destination visible and give
+   * uniform tap targets; nothing here can scroll out of reach.
+   */
+  .portalSidebar {
+    position: static;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 6px;
+  }
+
+  /*
+   * KEPT on mobile (it used to be `display: none`), spanning the row. Which
+   * account you are signed in as is otherwise unknowable on a phone — the
+   * sidebar is the only place that says it, and it sits directly above the
+   * button that ends the session.
+   */
+  .portalAccount {
+    grid-column: 1 / -1;
+    margin-bottom: 4px;
+    padding: 9px 11px 10px;
+  }
+
+  .portalNavLink {
+    padding: 9px 10px;
+  }
+
+  /*
+   * Its own full-width row at the end — so the rule that fences it off is in the
+   * axis the items are actually stacked in, which is what the old horizontal
+   * scroller could not give it.
+   */
+  .portalNavLogout {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    padding-top: 12px;
+  }
+
+  .footerInner {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .siteMain {
+    padding-top: 34px;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+    max-width: none;
+  }
+
+  .hero {
+    padding: 14px 0 28px;
+  }
+
+  .heroActions .siteBtn {
+    flex: 1 1 auto;
+  }
+
+  .portalHead {
+    flex-direction: column;
+  }
+
+  .footerInner {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* ---------- customer API docs (/docs) ---------- */
+
+/*
+ * The docs reuse the portal's two-column shell, so only prose styling is new.
+ * `max-width` on the body rather than on each element: a 100-character line of
+ * technical prose is unreadable, and the tables inside still need the full
+ * column, which a per-paragraph cap would not give them.
+ */
+.docsBody {
+  max-width: 78ch;
+}
+
+.docsBody h1 {
+  margin: 0 0 12px;
+  font-size: 23px;
+}
+
+.docsBody h2 {
+  margin: 30px 0 10px;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.docsBody h3 {
+  margin: 20px 0 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.docsBody p,
+.docsBody li {
+  margin: 10px 0;
+  color: var(--tk-muted);
+  font-size: 13.5px;
+  line-height: 1.68;
+}
+
+.docsBody strong {
+  color: var(--text);
+}
+
+.docsBody code {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12.5px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--hover);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* A code BLOCK scrolls inside itself. Without this a long curl line widens the
+   grid column and the whole page scrolls sideways on a phone. */
+.docsCode {
+  margin: 12px 0;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12.5px;
+  line-height: 1.65;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.docsBody .admin-table {
+  margin: 14px 0;
+  font-size: 13px;
+}
+
+.docsBody .admin-table td {
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+/*
+ * `.portalShell` sizes itself as a TOP-LEVEL page container — `width: min(1240px,
+ * 100vw - 40px)` with `margin: 0 auto` — because that is how /portal and /admin
+ * use it, directly inside the app shell.
+ *
+ * /docs reuses the same two-column grid but nests it inside `.siteMain`, the
+ * 1080px marketing container. Left alone the shell asserts 1240px inside a
+ * 1080px parent, overflows it by 160px, and the whole PAGE scrolls sideways —
+ * wide content is supposed to scroll inside its own container, never the body.
+ *
+ * Scoped to the nested case only, so /portal and /admin keep their own sizing.
+ */
+.siteMain .portalShell {
+  width: 100%;
+}
+
+/*
+ * Re-assert horizontal scrolling for docs tables at tablet and below.
+ *
+ * `globals.css` (@media max-width: 1024px) sets `.tableWrap { overflow-x:
+ * visible }` on purpose: the POSITIONS DASHBOARD table collapses into labelled
+ * cards at that width, so it has nothing left to scroll and the container would
+ * only clip it.
+ *
+ * The docs tables are ordinary `.admin-table`s — they do NOT collapse, so they
+ * keep their intrinsic width (~1700px for the endpoint table) and, with the
+ * wrapper's overflow switched off, push the whole PAGE sideways on a phone.
+ * Scoped to `.docsBody` so the dashboard's card behaviour is untouched.
+ */
+.docsBody .tableWrap {
+  overflow-x: auto;
+}
+
+/*
+ * The portal's equivalent of the rule above USED to live here, scoped to
+ * `.portalShell`. Deleted, not moved: `PortalShell` has rendered `.tw` since the
+ * migration and nothing has carried `.portalShell` since, so the selector matched
+ * no element and the rule had silently stopped doing its job. Its replacement is
+ * `.tw .stackTableWrap.tableWrap` in `app.css` — see the 721–1024px band note
+ * there, which explains why the scroll is restored only on the wrappers that
+ * stack rather than on every `.tableWrap` inside `.tw`.
+ */
+
+/* ---------- confirm dialog (ConfirmDialog) ---------- */
+
+/*
+ * Above the pay dialog's 60 but below the wallet picker's 70: a confirmation can
+ * legitimately open over another dialog, and nothing here ever needs to sit on top
+ * of the wallet. See `--onboard-modal-z-index` below for why 70 is the ceiling.
+ */
+.confirmBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in oklab, var(--bg) 78%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.confirmCard {
+  width: min(440px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+/* Focused on open so the dialog is announced; the border and backdrop already
+   show where focus went, so a ring around the whole card reads as an error. */
+.confirmCard:focus,
+.confirmCard:focus-visible {
+  outline: none;
+}
+
+.confirmTitle {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.confirmBody {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--tk-muted);
+}
+
+.confirmBody p {
+  margin: 0 0 10px;
+}
+
+.confirmBody strong {
+  color: var(--text);
+}
+
+/* The one sentence that prevents a lost payment. `window.confirm` flattened it
+   into the same grey as everything else, which is most of why this dialog exists. */
+.confirmWarn {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklab, var(--warn, #b45309) 55%, transparent);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--warn, #b45309) 12%, transparent);
+  color: var(--text);
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  /* Cancel first in the DOM (so it is the first tab stop and the safer default),
+     but the confirm sits on the right where the eye finishes. */
+  justify-content: flex-end;
+}
+
+/* A FILL, not a tint. `.admin-btn` sets `border: none`, so the earlier
+   `border-color` here painted nothing and the tinted background left the
+   destructive control quieter than the ghost cancel beside it — the reverse of
+   what it should be. Solid red against the ghost is the pairing people already
+   read correctly. */
+/* TWO classes, not one, and that is load order rather than taste: `panel.css` is
+   imported by `PortalShell` and lands AFTER this file, so a single-class
+   `.confirmDanger` tied with `.admin-btn` on specificity and lost — the
+   destructive button rendered in the accent teal, identical to the confirm it was
+   supposed to look different from. */
+.confirmActions .confirmDanger {
+  background: var(--red, #dc2626);
+  color: #fff;
+}
+
+.confirmActions .confirmDanger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+/* Monthly / Annual toggle above the plan table. */
+.planCadence {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+/* ---------- pay dialog (PayModal) ---------- */
+
+/*
+ * THE WALLET PICKER MUST PAINT ABOVE THE PAY DIALOG. Without this, paying from the
+ * dialog is IMPOSSIBLE.
+ *
+ * Web3-Onboard mounts `<onboard-v2>` on `document.body` and renders its picker in a
+ * shadow root as `section.fixed { z-index: var(--onboard-modal-z-index,
+ * var(--modal-z-index)) }`, with `--modal-z-index: 10` declared on `:host`. Nothing
+ * between `.payModalBackdrop` and the root creates a stacking context, so the two
+ * compete directly in the root stacking context and 60 beats 10: the picker renders
+ * UNDER a 78%-opaque blurred backdrop, every click on it hit-tests to the backdrop,
+ * and the button sits on "Waiting for your wallet…" until the 3-minute
+ * `CONNECT_TIMEOUT_MS` gives up. Observed exactly that.
+ *
+ * `all: initial` on the host does not reset custom properties (`all` excludes
+ * them), so setting one here reaches the shadow root by inheritance.
+ *
+ * 70 > 60. THESE TWO NUMBERS ARE A PAIR — raising `.payModalBackdrop` without
+ * raising this re-buries the picker, and the failure looks like a broken wallet
+ * rather than a CSS mistake. See WALLET_OVERLAY_TAGS in lib/wallet.ts.
+ */
+onboard-v2 {
+  --onboard-modal-z-index: 70;
+}
+
+/*
+ * `align-items: start` with padding, NOT `place-items: center` like
+ * `.revealBackdrop`. The pay panel grows a long way — network picker, wallet row,
+ * a six-row summary, a warning — and a centred grid item taller than the viewport
+ * overflows off BOTH edges with the top half unreachable. Anchored to the top it
+ * simply scrolls.
+ */
+.payModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(16px, 6vh, 64px) 16px;
+  background: color-mix(in oklab, var(--bg) 78%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+/* Focused on open so the dialog is announced, but it is a container rather than a
+   control — the dialog's own border and backdrop already show where focus went,
+   and a ring around the whole card reads as an error state. */
+.payModalCard:focus,
+.payModalCard:focus-visible {
+  outline: none;
+}
+
+.payModalCard {
+  position: relative;
+  width: min(620px, 100%);
+  border: 1px solid var(--tk-accent);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+/*
+ * Un-card the panel inside the dialog.
+ *
+ * `SignToPay` and `PayInstructions` render their own `.admin-card` because they
+ * ALSO render inline. Nested inside `.payModalCard` that is a second border, a
+ * second background and doubled padding — so the frame is dropped here rather
+ * than adding a prop to both components. Done in CSS on purpose: it cannot change
+ * either component's behaviour, only its chrome.
+ */
+.payModalCard > .admin-card {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* Room for the close button so a heading never runs under it. */
+.payModalCard > .admin-card > .admin-h:first-child {
+  padding-right: 34px;
+}
+
+.payModalClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--tk-muted);
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.payModalClose:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--tk-accent);
+}
+
+/* Disabled while a wallet prompt is open — see PayModal's dismissal note. */
+.payModalClose:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* Pay / cancel beneath a banner. Wraps rather than shrinking on a phone. */
+.bannerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Announced, never painted. Not `display: none` — that removes it from the a11y
+   tree too, which would defeat the point of a live region. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+ * NARROW SCREENS. A 42-character hex address is one unbreakable token, and inside
+ * the dialog it has ~244px to live in at 320px wide — so `.payInstrGrid`'s fixed
+ * 92px label column pushed "Paying from" / "Paying to" straight out past the card's
+ * edge. Below 420px the grid becomes one column (label above value) and the
+ * address is allowed to break anywhere, which is the only way it fits.
+ */
+.payModalCard .payInstrGrid dd {
+  overflow-wrap: anywhere;
+}
+
+.payModalCard select,
+.payModalCard .admin-input {
+  max-width: 100%;
+}
+
+@media (max-width: 420px) {
+  .payModalCard .payInstrGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px 0;
+  }
+
+  /* Once the grid is one column the network picker is alone on its line with
+     ~180px of unused row beside it, which reads as a control that failed to
+     size rather than a deliberate one. Full width is also the bigger target. */
+  .payModalCard .payInstrGrid select {
+    width: 100%;
+  }
+
+  .payModalCard {
+    padding: 16px;
+  }
+}
+
+/* ---------- on-chain pay-to-address panel (PayInstructions) ---------- */
+
+/*
+ * The network warning is the highest-stakes line: a wrong-network transfer is
+ * unrecoverable, so it gets a colour and a border rather than sitting in prose.
+ */
+.payInstrWarn {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklab, var(--warn, #b45309) 55%, transparent);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--warn, #b45309) 10%, transparent);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.payInstrGrid {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px 14px;
+  margin: 0 0 14px;
+}
+
+.payInstrGrid dt {
+  color: var(--tk-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-top: 3px;
+}
+
+.payInstrGrid dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.payInstrAmount {
+  font-weight: 600;
+}
+
+/* Address + copy button. `min-width: 0` + wrap so a 42-char address never
+   forces the page wider on a phone. */
+.copyField {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  margin-top: 4px;
+}
+
+.copyField code {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.copyFieldSmall code {
+  font-size: 11.5px;
+  color: var(--tk-muted);
+}
+
+.copyBtn {
+  flex: none;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.copyBtn:hover {
+  background: var(--hover);
+}
+
+/* ---------- portal mobile nav: bar + drawer ---------- */
+
+/*
+ * The phone layout for the portal nav, and the reason it is a DRAWER.
+ *
+ * Below 900px the sidebar used to be the first thing on every page: an account
+ * block, five tabs across two rows, a rule and Log out — five stacked rows of
+ * chrome before the content the customer came for. The two alternatives were
+ * measured and rejected: a horizontal scroller put 641px of nav in a 335px box
+ * (Settings and Log out 222px off-screen), and folding the tabs into the site
+ * header means five portal tabs beside Explore/Pricing/theme, ~500px of content
+ * in a 375px bar — the same scroller by another route.
+ *
+ * `PortalShell` swaps STRUCTURE on a matchMedia query rather than restyling one
+ * tree, so there is exactly one nav in the document and no hidden focus trap.
+ * These rules are therefore unconditional: the elements they match only exist in
+ * the compact layout. Declared at the END of the file on purpose — three separate
+ * rules shipped dead today because a base rule sat after the media query that
+ * overrode it, or lost a specificity tie to a two-class selector. Anything here
+ * that must beat the `max-width: 900px` block gets both classes.
+ */
+.portalShellCompact {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+/*
+ * The drawer's opener, sitting in the 44px top nav.
+ *
+ * Modelled on `.themeToggle` in `globals.css` — same height, radius and border —
+ * because they are peers in the same row and anything else makes one of them look
+ * like a mistake. It inherits the nav's uppercase/weight, so the label needs no
+ * font rules of its own.
+ */
+.appNavMenuBtn {
+  flex: 0 0 auto;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.appNavMenuBtn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+/*
+ * BELOW the pay dialog (60) and the cancel confirmation (65), and far below
+ * Web3-Onboard's picker (70) — see the `onboard-v2` block above. A nav drawer
+ * must never be able to cover a payment in progress.
+ */
+.portalDrawer {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+}
+
+.portalDrawerBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 12, 0.66);
+  backdrop-filter: blur(2px);
+}
+
+/*
+ * TWO classes so this beats the `max-width: 900px` grid rules for
+ * `.portalSidebar` — flex rather than grid, because Log out earns its place at
+ * the BOTTOM of the panel via `margin-top: auto`, which is the desktop
+ * arrangement and the one the rule above it was drawn for.
+ */
+.portalSidebar.portalDrawerPanel {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(300px, 84vw);
+  padding: 14px 14px 20px;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  background: var(--bg);
+  /* Fills the panel edge to edge; the account block keeps its own card border. */
+  border-radius: 0;
+}
+
+/* Focused on open so the drawer is announced, but it is a container rather than a
+   control (and `tabindex="-1"`, so never keyboard-reachable) — the panel edge and
+   backdrop already show where focus went, and a ring around the whole panel reads
+   as an error. Same rule and same reason as `.confirmCard` / `.payModalCard`. */
+.portalDrawerPanel:focus,
+.portalDrawerPanel:focus-visible {
+  outline: none;
+}
+
+.portalDrawerPanel .portalAccount {
+  margin-bottom: 8px;
+}
+
+.portalDrawerPanel .portalNavLink {
+  padding: 10px 11px;
+  font-size: 14px;
+}
+
+/* Bottom of the panel, rule above it — the desktop shape, restored. */
+.portalDrawerPanel .portalNavLogout {
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.portalDrawerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: var(--faint);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.portalDrawerClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 34px: a comfortable thumb target without crowding the panel head. */
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.portalDrawerClose:hover {
+  background: var(--hover);
+}
+
+/*
+ * The narrowest phones: the Menu button drops to its icon.
+ *
+ * Measured at 320px — with the word, the nav row was 358px inside 320px, so the
+ * theme toggle at the far end sat behind a scroll. The icon is unambiguous and
+ * the button keeps its accessible name from `aria-label`, so nothing is lost but
+ * the width.
+ *
+ * 360px, NOT 380px: at 375 (the commonest phone width) the row with the word
+ * measures exactly 375px and does not scroll, so that width keeps it. A first cut
+ * used 380 and hid the label on the very screen the comment claimed would keep it
+ * — the breakpoint has to be checked against the measurement, not chosen to look
+ * round.
+ */
+@media (max-width: 360px) {
+  .appNavMenuLabel {
+    display: none;
+  }
+
+  .appNavMenuBtn {
+    padding: 0 9px;
+  }
+}
+
+/* ---------- admin row overlay (AdminModal) ---------- */
+
+/*
+ * `align-items: start` with padding, NOT `place-items: center` like
+ * `.confirmBackdrop`. The Manage panel is the tallest surface in the admin —
+ * plan control, key issuer, keys grid, usage detail, monthly rollup — and a
+ * centred grid item taller than the viewport overflows off BOTH edges with its
+ * top half unreachable. Anchored to the top it simply scrolls.
+ *
+ * z-index 60, the same layer as `.payModalBackdrop`: the two never coexist (one
+ * is admin, one is portal), and matching them keeps every dialog in the app on
+ * one plane rather than inventing a stacking order nobody can reason about.
+ */
+.adminModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  /*
+   * `minmax(0, 1fr)`, NOT the default `auto` track. THIS IS THE WHOLE
+   * RESPONSIVENESS OF THE DIALOG, and `width: min(960px, 100%)` on the card is
+   * useless without it: an `auto` column is fit-content, so it sizes to the
+   * ITEM'S MIN-CONTENT, and `ClientDetail`'s min-content is ~616px (the key
+   * label input's 280px floor beside the key-type select's 260px). The track
+   * therefore grew to 616px inside a 375px backdrop and `100%` resolved
+   * against the overgrown track — measured card 616px wide with its right edge
+   * 251px past the viewport, while `documentElement.scrollWidth` still read a
+   * clean 375 because `html, body { overflow-x: clip }` swallowed it. Invisible
+   * AND unreachable, the same failure the headings hit in §11g.
+   */
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-items: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(12px, 5vh, 56px) 16px;
+  background: color-mix(in oklab, var(--bg) 78%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+/* Wider than the pay dialog (620px): this one holds a six-column keys table and
+   the usage detail's stat grid, both of which were designed for a page. */
+.adminModalCard {
+  position: relative;
+  width: min(960px, 100%);
+  /* The grid item's automatic minimum is `min-content`, which would re-inflate
+     the card past the track the line above just capped. The pair is what holds;
+     neither half works alone. */
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+/* Focused on open so the dialog is announced, but it is a container rather than
+   a control — the border and backdrop already show where focus went, and a ring
+   around the whole card reads as an error state. */
+.adminModalCard:focus,
+.adminModalCard:focus-visible {
+  outline: none;
+}
+
+/*
+ * Un-card the panel inside the dialog. `ClientDetail` renders its own
+ * `.admin-card`; nested here that is a second border, a second background and
+ * doubled padding. Dropped in CSS rather than behind a prop — it cannot change
+ * the panel's behaviour, only its chrome. See the `tw-bridge` twin in app.css:
+ * this rule is in the `legacy` layer and LOSES to the bridge's `.admin-card`
+ * frame, exactly as `.payModalCard > .admin-card` did.
+ */
+.adminModalCard > .admin-card {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* Room for the close button so the client's name never runs under it. The
+   panel's first block is the eyebrow + name pair. */
+.adminModalCard > .admin-card > :first-child {
+  padding-right: 34px;
+}
+
+.adminModalClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--tk-muted);
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.adminModalClose:hover {
+  color: var(--text);
+  border-color: var(--tk-accent);
+}
+
+@media (max-width: 720px) {
+  .adminModalBackdrop {
+    padding: 12px 10px;
+  }
+
+  .adminModalCard {
+    padding: 16px;
+  }
+}

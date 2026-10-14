@@ -1,0 +1,552 @@
+{
+  "info": {
+    "name": "Tickwise Positions Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Backend admin + read API.\n\nTwo admin surfaces:\n- Legacy ops routes (`/admin/sync/*`) gated by the `X-Admin-Secret` header.\n- New management routes (`/admin/auth`, `/admin/clients`, `/admin/plans`, `/admin/endpoint-costs`) gated by an admin JWT — run `Admin - Auth > Login` first; it captures `{{adminToken}}` automatically.\n\nPublic metered API (`/v1/*`): `KC-APIKey` header auth, per-plan unit metering. `Admin - Clients & Keys > Issue API key` captures `{{apiKey}}` for the `Public API (v1)` requests.\n\nSuggested order: Login → Create client → Issue API key → call `/v1/positions`."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3010" },
+    { "key": "adminSecret", "value": "change-me" },
+    { "key": "adminEmail", "value": "admin@example.com" },
+    { "key": "adminPassword", "value": "change-me-too" },
+    { "key": "adminToken", "value": "" },
+    { "key": "apiKey", "value": "" },
+    { "key": "clientId", "value": "" },
+    { "key": "keyId", "value": "" },
+    { "key": "planKey", "value": "free" },
+    { "key": "positionId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "Leaderboard",
+      "item": [
+        {
+          "name": "Top Positions - APR",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/top-positions?chainId=1&protocol=uniswap-v4&sort=apr&page=1&limit=20"
+          }
+        },
+        {
+          "name": "Top Positions - Fee APR",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/top-positions?chainId=1&protocol=uniswap-v4&sort=fee_apr&page=1&limit=20"
+          }
+        },
+        {
+          "name": "Top Positions - ROI",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/top-positions?chainId=1&protocol=uniswap-v4&sort=roi&page=1&limit=20"
+          }
+        },
+        {
+          "name": "Top Positions - Age",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/top-positions?chainId=1&protocol=uniswap-v4&sort=age&page=1&limit=20"
+          }
+        },
+        {
+          "name": "Top Positions - PnL",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/top-positions?chainId=1&protocol=uniswap-v4&sort=pnl&page=1&limit=20"
+          }
+        },
+        {
+          "name": "Top Positions - Underlying Value",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/top-positions?chainId=1&protocol=uniswap-v4&sort=underlying_value&page=1&limit=20"
+          }
+        },
+        {
+          "name": "Top Positions - Include Risky",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/top-positions?chainId=1&protocol=uniswap-v4&sort=apr&page=1&limit=20&includeRisky=true"
+          }
+        },
+        {
+          "name": "Top Positions - By Owner",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/top-positions?owner=0x0000000000000000000000000000000000000000&protocol=uniswap-v4&status=all&minValueUsd=0&minPoolTvl=0&includeRisky=true&sort=underlying_value&page=1&limit=100",
+            "description": "Every position held by an owner wallet (0x EVM address, case-insensitive). The widest visibility params (status=all, minValueUsd=0, minPoolTvl=0, includeRisky=true) ensure nothing the wallet holds is filtered out. Omit chainId to search all enabled chains."
+          }
+        },
+        {
+          "name": "Position Detail (includes transactions)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/top-positions/1/uniswap-v4/{{positionId}}",
+            "description": "Returns the position + its full transaction history with per-tx historical pricing. Each transaction has `amount0HistoricalPriceUsd` / `amount1HistoricalPriceUsd` / `historicalValueUsd` captured at the transaction's timestamp (not current price). The `historicalPricingSource` field shows which provider supplied the price (e.g. `defillama`, `geckoterminal`, `coingecko`, `alchemy`, `moralis`, `chainbase`, `miss`, or `revert-subgraph` when backend pricing is disabled)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public API (v1)",
+      "description": "Versioned public API. Metadata endpoints are free + unauthenticated; positions endpoints require the `KC-APIKey` header and decrement the client's plan quota. Responses carry `X-RateLimit-*` and `X-Quota-*` headers.",
+      "item": [
+        {
+          "name": "Chains (free, no key)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/chains",
+            "description": "Supported chains + which protocols are enabled on each. No API key, no metering."
+          }
+        },
+        {
+          "name": "Protocols (free, no key)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/protocols",
+            "description": "Enabled protocols (currently uniswap-v4) with the chains they run on. No API key, no metering."
+          }
+        },
+        {
+          "name": "Positions - list (metered)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "KC-APIKey", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/v1/positions?chainId=1&protocol=uniswap-v4&sort=apr&page=1&limit=20",
+            "description": "Same filters/sorts as /api/top-positions (apr, fee_apr, roi, age, pnl, underlying_value, nft_id_asc/desc; status, range, minValueUsd, minPoolTvl, includeRisky, positionId, poolId, owner). Filter by `owner` (0x EVM address) to fetch every position held by a wallet — omit chainId for all enabled chains. Requires a valid API key. Returns 401 without one, 429 when the burst rate or monthly unit quota is exceeded."
+          }
+        },
+        {
+          "name": "Position detail (metered)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "KC-APIKey", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/v1/positions/1/uniswap-v4/{{positionId}}",
+            "description": "Position + full transaction history. Requires a valid API key."
+          }
+        },
+        {
+          "name": "Position charts (metered)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "KC-APIKey", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/v1/positions/1/uniswap-v4/{{positionId}}/charts?range=30d",
+            "description": "Position time-series (value/fees/liquidity). range = 30d|60d|90d|180d|all (default 30d). Requires a valid API key."
+          }
+        },
+        {
+          "name": "Pools - list (metered)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "KC-APIKey", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/v1/pools?chainId=1&protocol=uniswap-v4&sort=tvl&page=1&limit=20",
+            "description": "Same filters/sorts as /api/top-pools (tvl, volume, fees, fee_apr, age; minTvlUsd, includeRisky, search). Each pool includes positionsCount (open LP positions) + holdersCount (distinct owners). Requires a valid API key."
+          }
+        },
+        {
+          "name": "Pool detail (metered)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "KC-APIKey", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/v1/pools/1/uniswap-v4/{{poolId}}",
+            "description": "Pool doc + positionsCount (open LP positions) + holdersCount (distinct owners). poolId = 0x + 40/64 hex. Requires a valid API key."
+          }
+        },
+        {
+          "name": "Pool charts (metered)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "KC-APIKey", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/v1/pools/1/uniswap-v4/{{poolId}}/charts?range=30d",
+            "description": "Pool time-series (tvl/volume/fees). range = 30d|60d|90d|180d|all (default 30d). Requires a valid API key."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Auth",
+      "description": "Admin-panel login. The first admin is seeded on boot from ADMIN_EMAIL / ADMIN_PASSWORD.",
+      "item": [
+        {
+          "name": "Login (captures adminToken)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.token) {",
+                  "  pm.collectionVariables.set('adminToken', json.token);",
+                  "  console.log('adminToken captured');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/auth/login",
+            "description": "Returns { token, email, role }. The test script stores the token in {{adminToken}} for every other admin request."
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/auth/me",
+            "description": "Returns the authenticated admin { email, role }."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Clients & Keys",
+      "description": "Manage API clients and their keys. Requires {{adminToken}} (run Admin - Auth > Login first).",
+      "item": [
+        {
+          "name": "Create client (captures clientId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json._id) {",
+                  "  pm.collectionVariables.set('clientId', json._id);",
+                  "  console.log('clientId captured: ' + json._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp\",\n  \"email\": \"dev@acme.test\",\n  \"planKey\": \"free\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/clients",
+            "description": "Create a client and assign a plan. Captures the new client _id into {{clientId}}."
+          }
+        },
+        {
+          "name": "List clients",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/clients"
+          }
+        },
+        {
+          "name": "Get client",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/clients/{{clientId}}"
+          }
+        },
+        {
+          "name": "Assign plan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planKey\": \"standard\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/clients/{{clientId}}/plan",
+            "description": "Change the client's plan. Takes effect on the next metered request."
+          }
+        },
+        {
+          "name": "Issue API key (captures apiKey + keyId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.apiKey) pm.collectionVariables.set('apiKey', json.apiKey);",
+                  "if (json && json.id) pm.collectionVariables.set('keyId', json.id);",
+                  "console.log('Raw API key (shown once): ' + (json && json.apiKey));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"server-to-server\",\n  \"keyType\": \"server\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/clients/{{clientId}}/keys",
+            "description": "Issue a new API key for the client. The raw key is returned ONCE (only its hash is stored). Captured into {{apiKey}} for the Public API (v1) requests.\n\n`keyType` is `server` (default — backend-only, rejected from browsers) or `browser`. A `browser` key REQUIRES a non-empty `origins` array and is rejected otherwise; a `server` key must NOT carry origins. Browser example body:\n```\n{\n  \"label\": \"customer-frontend\",\n  \"keyType\": \"browser\",\n  \"origins\": [\"https://app.example.com\", \"http://localhost:3000\"]\n}\n```\nOrigins are standardized server-side (a bare host like `app.example.com` becomes `https://app.example.com`)."
+          }
+        },
+        {
+          "name": "List keys",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/clients/{{clientId}}/keys",
+            "description": "Lists the client's keys (prefix + status + lastUsedAt). Never returns the raw key or its hash."
+          }
+        },
+        {
+          "name": "Revoke key",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/keys/{{keyId}}/revoke",
+            "description": "Revoke a key. Subsequent /v1 calls with it return 401."
+          }
+        },
+        {
+          "name": "Set key origins (server/browser)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origins\": [\"https://app.example.com\"]\n}"
+            },
+            "url": "{{baseUrl}}/admin/keys/{{keyId}}/origins",
+            "description": "Replace the key's allowed browser origins. A non-empty list makes it a `browser` key bound to those origins; an empty list (`{ \"origins\": [] }`) converts it to a `server` key. Entries are standardized to `scheme://host[:port]` (a bare host like `app.example.com` → `https://app.example.com`); paths, wildcards, and credentials are rejected 400."
+          }
+        },
+        {
+          "name": "Usage",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/clients/{{clientId}}/usage",
+            "description": "Per-period unitsConsumed + requestCount snapshot for the client."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Plans",
+      "description": "Plan tiers (units/month, rate limit, price). DB-backed and editable. Requires {{adminToken}}.",
+      "item": [
+        {
+          "name": "List plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/plans"
+          }
+        },
+        {
+          "name": "Create plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"trial\",\n  \"name\": \"Trial\",\n  \"monthlyUnits\": 10000,\n  \"rateLimitPerMin\": 30,\n  \"price\": 0,\n  \"enabled\": true\n}"
+            },
+            "url": "{{baseUrl}}/admin/plans",
+            "description": "monthlyUnits 0 = unlimited."
+          }
+        },
+        {
+          "name": "Update plan (Free units → 100)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monthlyUnits\": 100,\n  \"rateLimitPerMin\": 60\n}"
+            },
+            "url": "{{baseUrl}}/admin/plans/{{planKey}}",
+            "description": "Edit a plan's limits/price. Applies to live metering immediately (the plan's limiter is rebuilt with the new ceiling)."
+          }
+        },
+        {
+          "name": "Delete plan",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/plans/trial"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Endpoint Pricing",
+      "description": "Per-endpoint unit cost. DB-backed and editable from the panel. Requires {{adminToken}}.",
+      "item": [
+        {
+          "name": "List endpoint costs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/endpoint-costs"
+          }
+        },
+        {
+          "name": "Update endpoint cost (positions list → 10)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unitCost\": 10\n}"
+            },
+            "url": "{{baseUrl}}/admin/endpoint-costs/v1.positions.list",
+            "description": "Reprice an endpoint. Route keys: v1.positions.list, v1.positions.detail, v1.chains, v1.protocols. Applies to live metering immediately."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Sync (Backfill)",
+      "item": [
+        {
+          "name": "Sync - Backfill resume (single integration)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Admin-Secret", "value": "{{adminSecret}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chainId\": 1,\n  \"protocol\": \"uniswap-v4\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/sync/run",
+            "description": "Resume backfill from the persisted cursor. Pauses the live-refresh queue while in flight."
+          }
+        },
+        {
+          "name": "Sync - Backfill fromStart (single integration)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Admin-Secret", "value": "{{adminSecret}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chainId\": 1,\n  \"protocol\": \"uniswap-v4\",\n  \"fromStart\": true\n}"
+            },
+            "url": "{{baseUrl}}/admin/sync/run",
+            "description": "Reset the cursor to zero and rescan the whole subgraph ascending. Catches back-dated or previously-missed positions. Upsert handles already-stored rows."
+          }
+        },
+        {
+          "name": "Sync - Backfill all integrations",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Admin-Secret", "value": "{{adminSecret}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"all\": true\n}"
+            },
+            "url": "{{baseUrl}}/admin/sync/run",
+            "description": "Resume backfill for every enabled (chainId, protocol)."
+          }
+        },
+        {
+          "name": "Sync - Backfill all fromStart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Admin-Secret", "value": "{{adminSecret}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"all\": true,\n  \"fromStart\": true\n}"
+            },
+            "url": "{{baseUrl}}/admin/sync/run",
+            "description": "Reset cursor + rescan ascending for every enabled (chainId, protocol)."
+          }
+        },
+        {
+          "name": "Sync - Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Admin-Secret", "value": "{{adminSecret}}" }
+            ],
+            "url": "{{baseUrl}}/admin/sync/status",
+            "description": "BullMQ queue counts + per-(chainId, protocol) cursor state + last 20 sync runs."
+          }
+        }
+      ]
+    }
+  ]
+}

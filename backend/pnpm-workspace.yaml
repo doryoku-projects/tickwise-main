@@ -1,0 +1,16 @@
+# Keep identical to package.json `pnpm.overrides`. pnpm 10.x (the Dockerfile pins
+# 10.34.6) still reads that field and it TAKES PRECEDENCE over this file: changing only
+# the value here leaves the lockfile on the old override and a frozen install passes
+# (verified 2026-10-04). Newer pnpm reads only this file. Without the override a SECOND
+# ioredis version gets in beside bullmq's and breaks the `Redis -> ConnectionOptions`
+# assignment in queue.service.ts / payments-queue.service.ts with 8 duplicate-type
+# errors. Change both together, then `pnpm install` and commit pnpm-lock.yaml.
+overrides:
+  ioredis: ^5.3.0
+
+# esbuild (via tsx) needs its postinstall to place the platform binary, so `pnpm dev`
+# cannot run with its build script ignored. The other two are pnpm's own prompts.
+allowBuilds:
+  '@nestjs/core': true
+  esbuild: true
+  msgpackr-extract: true

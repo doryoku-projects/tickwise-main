@@ -1,0 +1,21 @@
+node_modules
+dist
+.env
+.DS_Store
+coverage
+.env.bak
+
+# Next.js leaves these behind if `next build` is ever run from this directory
+# by mistake — it is a Nest service and has no app/ or pages/, so the build
+# fails, but not before writing a trace. Ignored so a slip cannot be committed.
+/.next
+
+# Vite/Vitest bundles a TS config to a temporary `<config>.timestamp-<n>-<hash>.mjs`
+# next to it and deletes it on exit — a run killed mid-load leaves it behind.
+# (A pattern does not unstage a file already added: `git rm --cached` that.)
+*.timestamp-*.mjs
+
+# scripts/valuation-impact-report.mjs output (positions.csv carries owner
+# wallets). Each output directory also writes its own `.gitignore` of `*`;
+# this is the backstop for the default `./valuation-impact-<stamp>` location.
+/valuation-impact-*/
